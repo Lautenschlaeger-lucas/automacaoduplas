@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import Modal from './ui'
 import { AREAS } from '../lib/constants'
 
-const CLIENT_FIELDS = ['nome_cliente', 'cidade', 'uf', 'contato', 'telefone', 'versao_sistema']
+const CLIENT_FIELDS = ['nome_cliente']
 
 export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, areaInicial }) {
   const { user } = useAuth()
@@ -14,11 +14,6 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
   const [form, setForm] = useState({
     codigo_cliente: codigoInicial || '',
     nome_cliente: '',
-    cidade: '',
-    uf: '',
-    contato: '',
-    telefone: '',
-    versao_sistema: '',
     titulo: '',
     descricao: '',
     area: areaInicial || AREAS.TECNICA,
@@ -105,7 +100,7 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
           />
           {existing && (
             <span className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600">
-              <Info size={12} /> Cliente já existente — dados preenchidos automaticamente
+              <Info size={12} /> Cliente já existente — nome preenchido automaticamente
             </span>
           )}
         </label>
@@ -122,32 +117,6 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
             placeholder="Navegação Silva Ltda"
           />
         </label>
-
-        <div className="col-span-2 grid grid-cols-2 gap-3 sm:col-span-2">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Contato</span>
-            <input value={form.contato} onChange={(e) => set('contato', e.target.value)} className="field" placeholder="Maria Silva" />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Telefone</span>
-            <input value={form.telefone} onChange={(e) => set('telefone', e.target.value)} className="field" placeholder="(11) 99999-0000" />
-          </label>
-        </div>
-
-        <label className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Cidade</span>
-          <input value={form.cidade} onChange={(e) => set('cidade', e.target.value)} className="field" placeholder="São Paulo" />
-        </label>
-        <div className="col-span-2 grid grid-cols-2 gap-3 sm:col-span-1">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">UF</span>
-            <input value={form.uf} maxLength={2} onChange={(e) => set('uf', e.target.value.toUpperCase())} className="field" placeholder="SP" />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Versão do sistema</span>
-            <input value={form.versao_sistema} onChange={(e) => set('versao_sistema', e.target.value)} className="field" placeholder="10.4" />
-          </label>
-        </div>
 
         <div className="col-span-2 border-t border-slate-100 pt-4">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Área</p>
