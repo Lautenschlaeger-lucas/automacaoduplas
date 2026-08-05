@@ -100,9 +100,8 @@ export default function Dashboard() {
 
     const recent = [...t].sort((a, b) => new Date(b.atualizado_em) - new Date(a.atualizado_em)).slice(0, 5)
 
-    const comigo = t.filter((x) => x.responsavel_id === profile?.id)
+    const comTecnico = t.filter((x) => x.responsavel?.role === 'tecnica')
     const comTreinamento = t.filter((x) => x.responsavel?.role === 'treinamento')
-    const treinador = collabs.find((c) => c.role === 'treinamento')
 
     return {
       totalClients: codes.length,
@@ -110,17 +109,18 @@ export default function Dashboard() {
       abertos: t.filter((x) => x.status === STATUS.ABERTO).length,
       andamento: t.filter((x) => x.status === STATUS.EM_ANDAMENTO).length,
       pendencias: t.filter((x) => x.status === STATUS.PENDENCIA).length,
-      comigo: comigo.length,
-      comigoAndamento: comigo.filter((x) => x.status === STATUS.EM_ANDAMENTO).length,
-      comigoPend: comigo.filter((x) => x.status === STATUS.PENDENCIA).length,
+      comTecnico: comTecnico.length,
+      comTecnicoAndamento: comTecnico.filter((x) => x.status === STATUS.EM_ANDAMENTO).length,
+      comTecnicoPend: comTecnico.filter((x) => x.status === STATUS.PENDENCIA).length,
       comTreinamento: comTreinamento.length,
-      treinadorNome: treinador?.name?.split(' ')[0],
+      comTreinamentoAndamento: comTreinamento.filter((x) => x.status === STATUS.EM_ANDAMENTO).length,
+      comTreinamentoPend: comTreinamento.filter((x) => x.status === STATUS.PENDENCIA).length,
       perCollab,
       perArea,
       maxCollab: Math.max(...perCollab.map((c) => c.total), 1),
       recent,
     }
-  }, [tickets, collabs, profile])
+  }, [tickets, collabs])
 
   if (!stats) {
     return (
@@ -155,16 +155,16 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <KpiCard
           icon={Laptop}
-          label="Comigo"
-          value={stats.comigo}
-          sub={`${stats.comigoAndamento} em andamento · ${stats.comigoPend} pendências`}
+          label="Técnico"
+          value={stats.comTecnico}
+          sub={`${stats.comTecnicoAndamento} em andamento · ${stats.comTecnicoPend} pendências`}
           accent="bg-blue-50 text-blue-600"
         />
         <KpiCard
           icon={GraduationCap}
-          label="Com o treinamento"
+          label="Treinamento"
           value={stats.comTreinamento}
-          sub={stats.treinadorNome ? `com ${stats.treinadorNome}` : 'Sem treinador definido'}
+          sub={`${stats.comTreinamentoAndamento} em andamento · ${stats.comTreinamentoPend} pendências`}
           accent="bg-violet-50 text-violet-600"
         />
       </div>

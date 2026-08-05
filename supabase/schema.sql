@@ -41,6 +41,43 @@ create table if not exists public.tickets (
 
 create index if not exists tickets_codigo_idx on public.tickets (codigo_cliente);
 
+-- ticket pai (ticket geral do cliente): tabelas antigas precisam da coluna
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'tickets' and column_name = 'parent_id'
+  ) then
+    alter table public.tickets add column parent_id uuid;
+  end if;
+end
+$$;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'tickets_parent_fk') then
+    alter table public.tickets
+      add constraint tickets_parent_fk foreign key (parent_id)
+      references public.tickets(id) on delete cascade;
+  end if;
+end
+$$;
+
+create index if not exists tickets_parent_idx on public.tickets (parent_id);
+-- 1 ticket pai por cliente (sem parent_id = ticket geral)
+create unique index if not exists tickets_pai_unico on public.tickets (codigo_cliente) where parent_id is null;
+
+-- ---------- TABELA: PROCESSOS (checklist dos processos ja feitos do ticket pai) ----------
+create table if not exists public.processos (
+  id uuid primary key default gen_random_uuid(),
+  ticket_pai_id uuid not null references public.tickets(id) on delete cascade,
+  titulo text not null,
+  feito boolean not null default false,
+  criado_em timestamptz not null default now()
+);
+
+create index if not exists processos_ticket_idx on public.processos (ticket_pai_id);
+
 -- ---------- FUNCAO: verifica se user logado eh admin ----------
 create or replace function public.is_admin()
 returns boolean
@@ -79,6 +116,21 @@ select u.id, coalesce(u.raw_user_meta_data->>'name', split_part(u.email,'@',1))
 from auth.users u
 on conflict (id) do nothing;
 
+-- backfill: tickets antigos viram filhos do ticket mais antigo do mesmo cliente
+-- (o mais antigo de cada codigo_cliente passa a ser o ticket pai / geral)
+with pais as (
+  select distinct on (codigo_cliente) id, codigo_cliente
+  from public.tickets
+  where parent_id is null
+  order by codigo_cliente, criado_em asc
+)
+update public.tickets t
+set parent_id = p.id
+from pais p
+where t.codigo_cliente = p.codigo_cliente
+  and t.id <> p.id
+  and t.parent_id is null;
+
 -- mantem atualizado_em e calcula concluido_em automaticamente
 create or replace function public.set_tickets_updated_at()
 returns trigger
@@ -104,6 +156,7 @@ create trigger set_tickets_updated_at
 -- ---------- ROW LEVEL SECURITY ----------
 alter table public.profiles enable row level security;
 alter table public.tickets enable row level security;
+alter table public.processos enable row level security;
 
 -- profiles
 drop policy if exists "perfis: leitura autenticados" on public.profiles;
@@ -133,6 +186,20 @@ create policy "tickets: edicao autenticados" on public.tickets
 create policy "tickets: admin deleta" on public.tickets
   for delete using (public.is_admin());
 
+-- processos
+drop policy if exists "processos: leitura autenticados" on public.processos;
+drop policy if exists "processos: criacao autenticados" on public.processos;
+drop policy if exists "processos: edicao autenticados" on public.processos;
+drop policy if exists "processos: admin deleta" on public.processos;
+create policy "processos: leitura autenticados" on public.processos
+  for select using (auth.role() = 'authenticated');
+create policy "processos: criacao autenticados" on public.processos
+  for insert with check (auth.role() = 'authenticated');
+create policy "processos: edicao autenticados" on public.processos
+  for update using (auth.role() = 'authenticated');
+create policy "processos: admin deleta" on public.processos
+  for delete using (public.is_admin());
+
 -- ---------- REALTIME (adiciona so se ainda nao estiver) ----------
 do $$
 begin
@@ -141,6 +208,17 @@ begin
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'tickets'
   ) then
     alter publication supabase_realtime add table public.tickets;
+  end if;
+end
+$$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'processos'
+  ) then
+    alter publication supabase_realtime add table public.processos;
   end if;
 end
 $$;

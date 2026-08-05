@@ -71,9 +71,46 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
     setBusy(true)
     setError('')
     try {
-      const { error: err } = await supabase
+      const code = form.codigo_cliente.trim()
+      const payload = { ...form, codigo_cliente: code, criado_por: user.id }
+
+      const { data: pais } = await supabase
         .from('tickets')
-        .insert([{ ...form, codigo_cliente: form.codigo_cliente.trim(), criado_por: user.id }])
+        .select('id')
+        .eq('codigo_cliente', code)
+        .is('parent_id', null)
+        .limit(1)
+
+      let parentId = pais?.[0]?.id
+
+      if (!parentId) {
+        const { data: pai, error: paiErr } = await supabase
+          .from('tickets')
+          .insert([
+            {
+              codigo_cliente: code,
+              nome_cliente: form.nome_cliente,
+              titulo: form.nome_cliente || `Cliente ${code}`,
+              area: form.area,
+              criado_por: user.id,
+            },
+          ])
+          .select('id')
+          .single()
+        if (paiErr) {
+          const { data: jaExiste } = await supabase
+            .from('tickets')
+            .select('id')
+            .eq('codigo_cliente', code)
+            .is('parent_id', null)
+            .limit(1)
+          parentId = jaExiste?.[0]?.id
+        } else {
+          parentId = pai?.id
+        }
+      }
+
+      const { error: err } = await supabase.from('tickets').insert([{ ...payload, parent_id: parentId }])
       if (err) throw err
       onSaved?.()
       onClose()

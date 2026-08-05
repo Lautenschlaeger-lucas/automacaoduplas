@@ -39,6 +39,11 @@ function KanbanCard({ id }) {
         <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
           #{t.codigo_cliente}
         </span>
+        {!t.parent_id && (
+          <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+            Geral
+          </span>
+        )}
         <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold capitalize ${AREA_CHIP[t.area]}`}>
           {AREA_LABEL[t.area]}
         </span>
