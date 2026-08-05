@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
-import { Plus, Search, Laptop, GraduationCap } from 'lucide-react'
+import { Plus, Search, Laptop, GraduationCap, Wrench } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP } from '../lib/constants'
@@ -10,6 +10,18 @@ import TicketDetailModal from '../components/TicketDetailModal'
 
 const KanbanContext = createContext({ ticketsById: {} })
 const useKanbanCtx = () => useContext(KanbanContext)
+
+const BOARDS = [
+  { key: AREAS.TECNICA, title: AREA_LABEL[AREAS.TECNICA], Icon: Laptop, icon: 'text-blue-600', text: 'text-blue-700' },
+  {
+    key: AREAS.TREINAMENTO,
+    title: AREA_LABEL[AREAS.TREINAMENTO],
+    Icon: GraduationCap,
+    icon: 'text-violet-600',
+    text: 'text-violet-700',
+  },
+  { key: 'filhos', title: 'Tickets Técnicos', Icon: Wrench, icon: 'text-blue-600', text: 'text-blue-700' },
+]
 
 function AvatarDot({ name, role }) {
   const grad =
@@ -130,16 +142,14 @@ export default function Kanban() {
       if (!active || !data) return
       const byId = {}
       const cols = {}
-      Object.values(AREAS).forEach((area) => {
-        cols[area] = {}
-        STATUS_ORDER.forEach((s) => (cols[area][s] = []))
+      BOARDS.forEach((b) => {
+        cols[b.key] = {}
+        STATUS_ORDER.forEach((s) => (cols[b.key][s] = []))
       })
-      data
-        .filter((t) => !t.parent_id)
-        .forEach((t) => {
-          byId[t.id] = t
-          cols[t.area][t.status].push(t.id)
-        })
+      data.forEach((t) => {
+        byId[t.id] = t
+        cols[t.parent_id ? 'filhos' : t.area][t.status].push(t.id)
+      })
       setTicketsById(byId)
       setTicketsByColumn(cols)
     }
@@ -163,7 +173,6 @@ export default function Kanban() {
 
     const [srcArea, srcStatus] = source.droppableId.split(':')
     const [dstArea, dstStatus] = destination.droppableId.split(':')
-    if (srcArea !== dstArea) return
 
     setTicketsByColumn((prev) => {
       const cols = JSON.parse(JSON.stringify(prev))
@@ -174,13 +183,20 @@ export default function Kanban() {
       return cols
     })
 
-    if (srcStatus === dstStatus) return
+    if (srcArea === dstArea && srcStatus === dstStatus) return
 
-    const patch = { status: dstStatus }
+    const patch = {}
+    if (srcStatus !== dstStatus) patch.status = dstStatus
+    if (srcArea !== dstArea) patch.area = dstArea
+
     const moved = ticketsById[draggableId]
     if (!moved?.responsavel_id && (dstStatus === STATUS.EM_ANDAMENTO || dstStatus === STATUS.PENDENCIA)) {
       patch.responsavel_id = user?.id
       setTicketsById((prev) => ({ ...prev, [draggableId]: { ...prev[draggableId], responsavel_id: user?.id } }))
+    }
+
+    if (srcArea !== dstArea) {
+      setTicketsById((prev) => ({ ...prev, [draggableId]: { ...prev[draggableId], area: dstArea } }))
     }
 
     const { error } = await supabase.from('tickets').update(patch).eq('id', draggableId)
@@ -192,9 +208,9 @@ export default function Kanban() {
     const q = query.trim().toLowerCase()
     if (!q) return ticketsByColumn
     const cols = JSON.parse(JSON.stringify(ticketsByColumn))
-    Object.values(AREAS).forEach((area) =>
+    BOARDS.forEach((b) =>
       STATUS_ORDER.forEach((s) => {
-        cols[area][s] = cols[area][s].filter((id) => {
+        cols[b.key][s] = cols[b.key][s].filter((id) => {
           const t = ticketsById[id]
           if (!t) return false
           return (
@@ -246,28 +262,22 @@ export default function Kanban() {
 
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="flex flex-col gap-8">
-            {Object.values(AREAS).map((area) => (
-              <section key={area} className="min-w-0">
+            {BOARDS.map(({ key, title, Icon, icon, text }) => (
+              <section key={key} className="min-w-0">
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
-                  {area === 'tecnica' ? (
-                    <Laptop size={15} className="text-blue-600" />
-                  ) : (
-                    <GraduationCap size={15} className="text-violet-600" />
-                  )}
-                  <span className={area === 'tecnica' ? 'text-blue-700' : 'text-violet-700'}>
-                    {AREA_LABEL[area]}
-                  </span>
+                  <Icon size={15} className={icon} />
+                  <span className={text}>{title}</span>
                   <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
-                    {Object.values(filtered[area]).flat().length} tickets
+                    {Object.values(filtered[key]).flat().length} tickets
                   </span>
                 </h2>
                 <div className="flex gap-3 overflow-x-auto pb-2">
                   {STATUS_ORDER.map((status) => (
                     <Column
                       key={status}
-                      area={area}
+                      area={key}
                       status={status}
-                      ids={filtered[area][status]}
+                      ids={filtered[key][status]}
                       openTicket={(id) => setActiveTicket(ticketsById[id])}
                     />
                   ))}
