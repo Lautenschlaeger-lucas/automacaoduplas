@@ -224,8 +224,13 @@ begin
 end
 $$;
 
--- ---------- DADOS DE EXEMPLO ----------
-insert into public.tickets
+-- ---------- DADOS DE EXEMPLO (so entra se a tabela estiver vazia) ----------
+do $$
+begin
+  if exists (select 1 from public.tickets) then
+    return;
+  end if;
+  insert into public.tickets
   (codigo_cliente, nome_cliente, cidade, uf, contato, telefone, versao_sistema,
    titulo, descricao, area, status, prioridade, criado_em)
 values
@@ -249,8 +254,10 @@ values
    'Encerramento do projeto', 'Entrega final e assinatura do termo', 'tecnica', 'concluido', 'baixa', now() - interval '14 days'),
   ('287', 'Supermercado Bom Preco', 'Belo Horizonte', 'MG', 'Jose Lima',      '(31) 6666-3333', '10.1',
    'Treinamento completo', 'Toda equipe treinada nos 3 modulos', 'treinamento', 'concluido', 'baixa', now() - interval '12 days'),
-  ('330', 'Transportadora Rota X',  'Curitiba',       'PR', 'Paulo Costa',    '(41) 5555-4444', '10.4',
-   'Pausar licencas', 'Suspender licencas durante pausa', 'tecnica', 'concluido', 'media', now() - interval '10 days');
+   ('330', 'Transportadora Rota X',  'Curitiba',       'PR', 'Paulo Costa',    '(41) 5555-4444', '10.4',
+    'Pausar licencas', 'Suspender licencas durante pausa', 'tecnica', 'concluido', 'media', now() - interval '10 days');
+end
+$$;
 
 -- forca o PostgREST a recarregar o schema (evita o erro 404 PGRST205)
 notify pgrst, 'reload schema';
