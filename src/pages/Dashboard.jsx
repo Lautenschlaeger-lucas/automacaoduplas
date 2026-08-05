@@ -107,7 +107,10 @@ export default function Dashboard() {
         map.set(t.codigo_cliente, p)
       }
       if (t.parent_id) p.filhos.push(t)
-      else p.parent = t
+      else {
+        p.parent = t
+        p.nome = t.titulo || t.nome_cliente || ''
+      }
     })
     return [...map.values()]
       .map((p) => {
