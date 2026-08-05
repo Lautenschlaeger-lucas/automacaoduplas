@@ -46,7 +46,7 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved }) {
     }
   }
 
-  if (!form) return null
+  if (!ticket || !form) return null
 
   return (
     <Modal open={open} onClose={onClose} title={`Ticket #${ticket.codigo_cliente}`} wide>
