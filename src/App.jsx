@@ -4,7 +4,6 @@ import Layout from './components/Layout'
 import Auth from './components/Auth'
 import Dashboard from './pages/Dashboard'
 import Kanban from './pages/Kanban'
-import Clients from './pages/Clients'
 import ClientDetail from './pages/ClientDetail'
 
 function Loader() {
@@ -30,7 +29,6 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/kanban" element={<Kanban />} />
-          <Route path="/clientes" element={<Clients />} />
           <Route path="/clientes/:codigo" element={<ClientDetail />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
