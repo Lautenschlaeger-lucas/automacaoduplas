@@ -109,7 +109,6 @@ function Column({ area, status, ids, openTicket }) {
 
 export default function Kanban() {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const [ticketsByColumn, setTicketsByColumn] = useState(null)
   const [ticketsById, setTicketsById] = useState({})
   const [query, setQuery] = useState('')
