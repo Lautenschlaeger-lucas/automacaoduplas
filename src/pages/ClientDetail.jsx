@@ -33,6 +33,7 @@ import { formatDate, timeAgo, daysBetween } from '../lib/format'
 import { Spinner, EmptyState, Avatar } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
 import EditClientModal from '../components/EditClientModal'
+import TicketDetailModal from '../components/TicketDetailModal'
 
 const BLOCKS = [
   { key: STATUS.ABERTO, icon: Clock, title: 'Em aberto' },
@@ -60,6 +61,7 @@ export default function ClientDetail() {
   const [tickets, setTickets] = useState(null)
   const [showNew, setShowNew] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [activeTicket, setActiveTicket] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -92,7 +94,7 @@ export default function ClientDetail() {
   async function removeClient() {
     if (!confirm(`Excluir o cliente #${codigo} e todos os seus tickets?`)) return
     const { error } = await supabase.from('tickets').delete().eq('codigo_cliente', codigo)
-    if (!error) navigate('/clientes')
+    if (!error) navigate('/kanban')
   }
 
   if (!tickets) {
@@ -238,7 +240,11 @@ export default function ClientDetail() {
               ) : (
                 <div className="flex flex-col gap-2">
                   {list.map((t) => (
-                    <div key={t.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 transition hover:border-blue-200">
+                    <div
+                      key={t.id}
+                      onClick={() => setActiveTicket(t)}
+                      className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50/60 p-3 transition hover:border-blue-200"
+                    >
                       <div className="mb-1 flex flex-wrap items-center gap-1.5">
                         <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold capitalize ${AREA_CHIP[t.area]}`}>
                           {AREA_LABEL[t.area]}
@@ -274,6 +280,11 @@ export default function ClientDetail() {
 
       <NewTicketModal open={showNew} onClose={() => setShowNew(false)} codigoInicial={codigo} />
       <EditClientModal open={editing} onClose={() => setEditing(false)} client={editClient} onSaved={() => {}} />
+      <TicketDetailModal
+        open={!!activeTicket}
+        ticket={activeTicket}
+        onClose={() => setActiveTicket(null)}
+      />
     </div>
   )
 }

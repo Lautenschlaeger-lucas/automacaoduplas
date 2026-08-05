@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Plus, Search, Laptop, GraduationCap } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -7,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP } from '../lib/constants'
 import { Spinner } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
+import TicketDetailModal from '../components/TicketDetailModal'
 
 const KanbanContext = createContext({ ticketsById: {} })
 const useKanbanCtx = () => useContext(KanbanContext)
@@ -56,7 +56,7 @@ function KanbanCard({ id }) {
   )
 }
 
-function Column({ area, status, ids, openClient }) {
+function Column({ area, status, ids, openTicket }) {
   return (
     <Droppable droppableId={`${area}:${status}`}>
       {(provided, snapshot) => (
@@ -87,7 +87,7 @@ function Column({ area, status, ids, openClient }) {
                     ref={dragProvided.innerRef}
                     {...dragProvided.draggableProps}
                     {...dragProvided.dragHandleProps}
-                    onClick={() => openClient(id)}
+                    onClick={() => openTicket(id)}
                     className={`glass cursor-pointer rounded-xl p-3 transition ${
                       dragSnapshot.isDragging
                         ? 'rotate-1 scale-[1.03] shadow-lg ring-2 ring-blue-300'
@@ -114,6 +114,7 @@ export default function Kanban() {
   const [ticketsById, setTicketsById] = useState({})
   const [query, setQuery] = useState('')
   const [showNew, setShowNew] = useState(false)
+  const [activeTicket, setActiveTicket] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -260,7 +261,7 @@ export default function Kanban() {
                       area={area}
                       status={status}
                       ids={filtered[area][status]}
-                      openClient={(id) => navigate(`/clientes/${ticketsById[id].codigo_cliente}`)}
+                      openTicket={(id) => setActiveTicket(ticketsById[id])}
                     />
                   ))}
                 </div>
@@ -270,6 +271,11 @@ export default function Kanban() {
         </DragDropContext>
 
         <NewTicketModal open={showNew} onClose={() => setShowNew(false)} />
+        <TicketDetailModal
+          open={!!activeTicket}
+          ticket={activeTicket}
+          onClose={() => setActiveTicket(null)}
+        />
       </div>
     </KanbanContext.Provider>
   )

@@ -73,6 +73,12 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
+-- backfill: cria perfis de contas ja existentes (se o gatilho nao existia antes)
+insert into public.profiles (id, name)
+select u.id, coalesce(u.raw_user_meta_data->>'name', split_part(u.email,'@',1))
+from auth.users u
+on conflict (id) do nothing;
+
 -- mantem atualizado_em e calcula concluido_em automaticamente
 create or replace function public.set_tickets_updated_at()
 returns trigger
@@ -100,6 +106,10 @@ alter table public.profiles enable row level security;
 alter table public.tickets enable row level security;
 
 -- profiles
+drop policy if exists "perfis: leitura autenticados" on public.profiles;
+drop policy if exists "perfis: editar proprio" on public.profiles;
+drop policy if exists "perfis: admin atualiza" on public.profiles;
+drop policy if exists "perfis: admin deleta" on public.profiles;
 create policy "perfis: leitura autenticados" on public.profiles
   for select using (auth.role() = 'authenticated');
 create policy "perfis: editar proprio" on public.profiles
@@ -110,6 +120,10 @@ create policy "perfis: admin deleta" on public.profiles
   for delete using (public.is_admin());
 
 -- tickets
+drop policy if exists "tickets: leitura autenticados" on public.tickets;
+drop policy if exists "tickets: criacao autenticados" on public.tickets;
+drop policy if exists "tickets: edicao autenticados" on public.tickets;
+drop policy if exists "tickets: admin deleta" on public.tickets;
 create policy "tickets: leitura autenticados" on public.tickets
   for select using (auth.role() = 'authenticated');
 create policy "tickets: criacao autenticados" on public.tickets
