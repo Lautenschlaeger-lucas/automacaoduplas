@@ -34,17 +34,17 @@ export const STATUS_LABEL = {
 }
 
 export const STATUS_DOT = {
-  aberto: 'bg-sky-400',
-  em_andamento: 'bg-amber-400',
-  pendencia: 'bg-rose-400',
-  concluido: 'bg-emerald-400',
+  aberto: 'bg-sky-500',
+  em_andamento: 'bg-amber-500',
+  pendencia: 'bg-rose-500',
+  concluido: 'bg-emerald-500',
 }
 
 export const STATUS_CHIP = {
-  aberto: 'text-sky-300 bg-sky-400/10 border-sky-400/30',
-  em_andamento: 'text-amber-300 bg-amber-400/10 border-amber-400/30',
-  pendencia: 'text-rose-300 bg-rose-400/10 border-rose-400/30',
-  concluido: 'text-emerald-300 bg-emerald-400/10 border-emerald-400/30',
+  aberto: 'text-sky-700 bg-sky-50 border-sky-200',
+  em_andamento: 'text-amber-700 bg-amber-50 border-amber-200',
+  pendencia: 'text-rose-700 bg-rose-50 border-rose-200',
+  concluido: 'text-emerald-700 bg-emerald-50 border-emerald-200',
 }
 
 export const PRIORITY = {
@@ -60,35 +60,38 @@ export const PRIORITY_LABEL = {
 }
 
 export const PRIORITY_BADGE = {
-  baixa: 'text-emerald-300 bg-emerald-400/10 border-emerald-400/30',
-  media: 'text-amber-300 bg-amber-400/10 border-amber-400/30',
-  alta: 'text-rose-300 bg-rose-400/10 border-rose-400/30',
+  baixa: 'text-slate-600 bg-slate-100 border-slate-200',
+  media: 'text-amber-700 bg-amber-50 border-amber-200',
+  alta: 'text-rose-700 bg-rose-50 border-rose-200',
 }
 
 export const CLIENT_STATUS = {
   ATIVO: 'ativo',
   CONCLUIDO: 'concluido',
-  PAUSADO: 'pausado',
 }
 
 export const CLIENT_STATUS_LABEL = {
   ativo: 'Ativo',
   concluido: 'Concluído',
-  pausado: 'Pausado',
 }
 
 export const CLIENT_STATUS_CHIP = {
-  ativo: 'text-emerald-300 bg-emerald-400/10 border-emerald-400/30',
-  concluido: 'text-sky-300 bg-sky-400/10 border-sky-400/30',
-  pausado: 'text-amber-300 bg-amber-400/10 border-amber-400/30',
+  ativo: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  concluido: 'text-sky-700 bg-sky-50 border-sky-200',
 }
 
 export const AREA_BAR = {
-  tecnica: 'from-cyan-400 to-indigo-400',
-  treinamento: 'from-fuchsia-400 to-violet-400',
+  tecnica: 'bg-blue-500',
+  treinamento: 'bg-violet-500',
 }
 
 export const AREA_CHIP = {
-  tecnica: 'text-cyan-300 bg-cyan-400/10 border-cyan-400/30',
-  treinamento: 'text-fuchsia-300 bg-fuchsia-400/10 border-fuchsia-400/30',
+  tecnica: 'text-blue-700 bg-blue-50 border-blue-200',
+  treinamento: 'text-violet-700 bg-violet-50 border-violet-200',
+}
+
+export const ROLE_SOLID = {
+  admin: 'bg-amber-500',
+  tecnica: 'bg-blue-500',
+  treinamento: 'bg-violet-500',
 }

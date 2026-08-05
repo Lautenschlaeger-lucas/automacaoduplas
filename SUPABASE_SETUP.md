@@ -15,10 +15,12 @@
 2. Clique em **New query**.
 3. Cole **todo o conteúdo** do arquivo `supabase/schema.sql`.
 4. Clique em **Run**.
-5. Teve sucesso se aparecer as tabelas `profiles`, `clients` e `tickets` na aba **Table Editor**.
+5. Teve sucesso se aparecer as tabelas `profiles` e `tickets` na aba **Table Editor** (com os tickets de exemplo).
 
 > O schema já cria as políticas de segurança (RLS), os gatilhos automáticos e
-> clientes/tickets de exemplo para você testar.
+> tickets de exemplo para você testar. Neste modelo, **o ticket carrega as infos
+> do cliente** (código, nome, cidade, contato...) — o "cliente" é o conjunto de
+> tickets com o mesmo código.
 
 ## 3. Pegar as chaves de conexão
 
@@ -59,5 +61,8 @@
 - Para apagar os dados de exemplo depois:
   ```sql
   delete from public.tickets;
-  delete from public.clients where codigo in ('324','299','301','287','330');
+  ```
+- Se alguma vez o banco ficou "travado" com erro `404 PGRST205`, rode no SQL Editor:
+  ```sql
+  notify pgrst, 'reload schema';
   ```

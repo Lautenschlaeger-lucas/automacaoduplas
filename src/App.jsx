@@ -10,7 +10,7 @@ import ClientDetail from './pages/ClientDetail'
 function Loader() {
   return (
     <div className="bg-space flex min-h-screen items-center justify-center">
-      <div className="dial h-10 w-10 animate-spin rounded-full opacity-80 blur-[1px]" />
+      <div className="dial h-10 w-10 animate-spin rounded-full opacity-70" />
     </div>
   )
 }
@@ -31,7 +31,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/kanban" element={<Kanban />} />
           <Route path="/clientes" element={<Clients />} />
-          <Route path="/clientes/:id" element={<ClientDetail />} />
+          <Route path="/clientes/:codigo" element={<ClientDetail />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

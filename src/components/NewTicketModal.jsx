@@ -1,20 +1,27 @@
 import { useEffect, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Info } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Modal from './ui'
 import { AREAS } from '../lib/constants'
 
-export default function NewTicketModal({ open, onClose, onSaved, clienteId, areaInicial }) {
+const CLIENT_FIELDS = ['nome_cliente', 'cidade', 'uf', 'contato', 'telefone', 'versao_sistema']
+
+export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, areaInicial }) {
   const { user } = useAuth()
-  const [clients, setClients] = useState([])
   const [collabs, setCollabs] = useState([])
+  const [existing, setExisting] = useState(false)
   const [form, setForm] = useState({
-    cliente_id: clienteId || '',
+    codigo_cliente: codigoInicial || '',
+    nome_cliente: '',
+    cidade: '',
+    uf: '',
+    contato: '',
+    telefone: '',
+    versao_sistema: '',
     titulo: '',
     descricao: '',
     area: areaInicial || AREAS.TECNICA,
-    status: 'aberto',
     prioridade: 'media',
     responsavel_id: user?.id || '',
   })
@@ -26,22 +33,52 @@ export default function NewTicketModal({ open, onClose, onSaved, clienteId, area
     setError('')
     setForm((f) => ({
       ...f,
-      cliente_id: clienteId || f.cliente_id,
+      codigo_cliente: codigoInicial || f.codigo_cliente,
       area: areaInicial || f.area,
       responsavel_id: user?.id || f.responsavel_id,
     }))
-    supabase.from('clients').select('id, codigo, nome').order('codigo').then(({ data }) => setClients(data || []))
     supabase.from('profiles').select('id, name, role').order('name').then(({ data }) => setCollabs(data || []))
-  }, [open, clienteId, areaInicial, user])
+  }, [open, codigoInicial, areaInicial, user])
+
+  function set(k, v) {
+    setForm((f) => ({ ...f, [k]: v }))
+  }
+
+  async function handleCodigoChange(value) {
+    set('codigo_cliente', value)
+    const code = value.trim()
+    if (!code) {
+      setExisting(false)
+      return
+    }
+    const { data } = await supabase
+      .from('tickets')
+      .select(CLIENT_FIELDS.join(','))
+      .eq('codigo_cliente', code)
+      .order('criado_em', { ascending: false })
+      .limit(1)
+    if (data?.length) {
+      setExisting(true)
+      setForm((f) => ({ ...f, ...pick(data[0]) }))
+    } else {
+      setExisting(false)
+    }
+  }
+
+  function pick(ticketLink) {
+    const next = {}
+    CLIENT_FIELDS.forEach((k) => (next[k] = ticketLink[k] || ''))
+    return next
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setBusy(true)
     setError('')
     try {
-      const { error: err } = await supabase.from('tickets').insert([
-        { ...form, cliente_id: form.cliente_id || null, criado_por: user.id },
-      ])
+      const { error: err } = await supabase
+        .from('tickets')
+        .insert([{ ...form, codigo_cliente: form.codigo_cliente.trim(), criado_por: user.id }])
       if (err) throw err
       onSaved?.()
       onClose()
@@ -52,98 +89,111 @@ export default function NewTicketModal({ open, onClose, onSaved, clienteId, area
     }
   }
 
-  const inputCls =
-    'w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 transition focus:border-cyan-400/50'
-
   return (
-    <Modal open={open} onClose={onClose} title="Novo ticket">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cliente</span>
-          <select
+    <Modal open={open} onClose={onClose} title="Novo ticket" wide>
+      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+        <label className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            Código do cliente *
+          </span>
+          <input
             required
-            value={form.cliente_id}
-            onChange={(e) => setForm({ ...form, cliente_id: e.target.value })}
-            className={inputCls}
-          >
-            <option value="" disabled>
-              Selecione o cliente
-            </option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                #{c.codigo} — {c.nome}
-              </option>
-            ))}
-          </select>
+            value={form.codigo_cliente}
+            onChange={(e) => handleCodigoChange(e.target.value)}
+            className="field"
+            placeholder="Ex: 324"
+          />
+          {existing && (
+            <span className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600">
+              <Info size={12} /> Cliente já existente — dados preenchidos automaticamente
+            </span>
+          )}
         </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Área</span>
+        <label className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            Nome do cliente *
+          </span>
+          <input
+            required
+            value={form.nome_cliente}
+            onChange={(e) => set('nome_cliente', e.target.value)}
+            className="field"
+            placeholder="Navegação Silva Ltda"
+          />
+        </label>
+
+        <div className="col-span-2 grid grid-cols-2 gap-3 sm:col-span-2">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Contato</span>
+            <input value={form.contato} onChange={(e) => set('contato', e.target.value)} className="field" placeholder="Maria Silva" />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Telefone</span>
+            <input value={form.telefone} onChange={(e) => set('telefone', e.target.value)} className="field" placeholder="(11) 99999-0000" />
+          </label>
+        </div>
+
+        <label className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Cidade</span>
+          <input value={form.cidade} onChange={(e) => set('cidade', e.target.value)} className="field" placeholder="São Paulo" />
+        </label>
+        <div className="col-span-2 grid grid-cols-2 gap-3 sm:col-span-1">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">UF</span>
+            <input value={form.uf} maxLength={2} onChange={(e) => set('uf', e.target.value.toUpperCase())} className="field" placeholder="SP" />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Versão do sistema</span>
+            <input value={form.versao_sistema} onChange={(e) => set('versao_sistema', e.target.value)} className="field" placeholder="10.4" />
+          </label>
+        </div>
+
+        <div className="col-span-2 border-t border-slate-100 pt-4">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Área</p>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { key: AREAS.TECNICA, label: '⚙️ Técnica' },
-              { key: AREAS.TREINAMENTO, label: '🎓 Treinamento' },
+              { key: AREAS.TECNICA, label: 'Técnica' },
+              { key: AREAS.TREINAMENTO, label: 'Treinamento' },
             ].map((a) => (
               <button
                 type="button"
                 key={a.key}
-                onClick={() => setForm({ ...form, area: a.key })}
+                onClick={() => set('area', a.key)}
                 className={`rounded-xl border py-2 text-sm font-semibold transition ${
                   form.area === a.key
-                    ? a.key === AREAS.TREINAMENTO
-                      ? 'border-fuchsia-400/60 bg-fuchsia-400/10 text-fuchsia-200'
-                      : 'border-cyan-400/60 bg-cyan-400/10 text-cyan-200'
-                    : 'border-white/10 bg-white/5 text-slate-400 hover:text-slate-200'
+                    ? 'dial shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-500 hover:text-slate-700'
                 }`}
               >
                 {a.label}
               </button>
             ))}
           </div>
+        </div>
+
+        <label className="col-span-2 flex flex-col gap-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Título *</span>
+          <input required value={form.titulo} onChange={(e) => set('titulo', e.target.value)} className="field" placeholder="Ex: Instalar banco de dados" />
         </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Título</span>
-          <input
-            required
-            value={form.titulo}
-            onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-            className={inputCls}
-            placeholder="Ex: Instalar banco de dados"
-          />
+        <label className="col-span-2 flex flex-col gap-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Descrição</span>
+          <textarea rows={3} value={form.descricao} onChange={(e) => set('descricao', e.target.value)} className="field resize-none" placeholder="Detalhes da atividade..." />
         </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Descrição</span>
-          <textarea
-            rows={3}
-            value={form.descricao}
-            onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-            className={`${inputCls} resize-none`}
-            placeholder="Detalhes da atividade..."
-          />
-        </label>
-
-        <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2 grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Prioridade</span>
-            <select
-              value={form.prioridade}
-              onChange={(e) => setForm({ ...form, prioridade: e.target.value })}
-              className={inputCls}
-            >
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Prioridade</span>
+            <select value={form.prioridade} onChange={(e) => set('prioridade', e.target.value)} className="field">
               <option value="baixa">Baixa</option>
               <option value="media">Média</option>
               <option value="alta">Alta</option>
             </select>
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Responsável</span>
-            <select
-              value={form.responsavel_id || ''}
-              onChange={(e) => setForm({ ...form, responsavel_id: e.target.value || null })}
-              className={inputCls}
-            >
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Responsável</span>
+            <select value={form.responsavel_id || ''} onChange={(e) => set('responsavel_id', e.target.value || null)} className="field">
               <option value="">Sem responsável</option>
               {collabs.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -154,16 +204,14 @@ export default function NewTicketModal({ open, onClose, onSaved, clienteId, area
           </label>
         </div>
 
-        {error && <p className="text-xs text-rose-300">{error}</p>}
+        {error && <p className="col-span-2 text-xs text-rose-600">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={busy}
-          className="dial mt-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-slate-950 transition hover:opacity-90 disabled:opacity-60"
-        >
-          {busy && <Loader2 size={16} className="animate-spin" />}
-          Criar ticket
-        </button>
+        <div className="col-span-2">
+          <button type="submit" disabled={busy} className="btn-primary w-full">
+            {busy && <Loader2 size={16} className="animate-spin" />}
+            Criar ticket
+          </button>
+        </div>
       </form>
     </Modal>
   )

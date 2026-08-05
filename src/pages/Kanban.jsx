@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
-import { Plus, Search, Laptop, GraduationCap, Columns } from 'lucide-react'
+import { Plus, Search, Laptop, GraduationCap } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL } from '../lib/constants'
+import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP } from '../lib/constants'
 import { Spinner } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
 
@@ -14,13 +14,13 @@ const useKanbanCtx = () => useContext(KanbanContext)
 function AvatarDot({ name, role }) {
   const grad =
     role === 'treinamento'
-      ? 'from-fuchsia-400 to-violet-500'
+      ? 'bg-violet-500'
       : role === 'admin'
-        ? 'from-amber-300 to-orange-500'
-        : 'from-cyan-400 to-indigo-400'
+        ? 'bg-amber-500'
+        : 'bg-blue-500'
   return (
     <span
-      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[9px] font-bold text-slate-950 ${grad}`}
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white ${grad}`}
     >
       {(name || '?').charAt(0).toUpperCase()}
     </span>
@@ -32,22 +32,25 @@ function KanbanCard({ id }) {
   const t = ticketsById[id]
   if (!t) return null
   const priority =
-    t.prioridade === 'alta' ? 'text-rose-300' : t.prioridade === 'media' ? 'text-amber-300' : 'text-emerald-300'
+    t.prioridade === 'alta' ? 'text-rose-600' : t.prioridade === 'media' ? 'text-amber-600' : 'text-emerald-600'
   return (
     <>
       <div className="mb-1 flex items-center gap-2">
-        <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-bold text-slate-300">
-          #{t.clientes?.codigo}
+        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+          #{t.codigo_cliente}
+        </span>
+        <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold capitalize ${AREA_CHIP[t.area]}`}>
+          {AREA_LABEL[t.area]}
         </span>
         <span className={`ml-auto text-[10px] font-bold uppercase tracking-wider ${priority}`}>
           {t.prioridade}
         </span>
       </div>
-      <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-slate-100">{t.titulo}</h3>
-      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-500">
+      <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-slate-800">{t.titulo}</h3>
+      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-400">
         <AvatarDot name={t.responsavel?.name} role={t.responsavel?.role} />
         <span className="truncate">{t.responsavel?.name?.split(' ')[0] || 'Sem responsável'}</span>
-        {t.clientes?.nome && <span className="truncate">· {t.clientes.nome}</span>}
+        {t.nome_cliente && <span className="truncate">· {t.nome_cliente}</span>}
       </div>
     </>
   )
@@ -60,8 +63,8 @@ function Column({ area, status, ids, openClient }) {
         <div className="flex min-w-60 flex-1 flex-col">
           <div className="mb-2 flex items-center gap-2 px-1">
             <span className={`h-2 w-2 rounded-full ${STATUS_DOT[status]}`} />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-300">{STATUS_LABEL[status]}</span>
-            <span className="ml-auto rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{STATUS_LABEL[status]}</span>
+            <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
               {ids.length}
             </span>
           </div>
@@ -70,12 +73,12 @@ function Column({ area, status, ids, openClient }) {
             {...provided.droppableProps}
             className={`flex min-h-24 flex-col gap-2 rounded-2xl border p-2 transition ${
               snapshot.isDraggingOver
-                ? 'border-cyan-400/40 bg-cyan-400/[0.06] shadow-[inset_0_0_30px_rgba(34,211,238,0.08)]'
-                : 'border-white/5 bg-white/[0.02]'
+                ? 'border-blue-300 bg-blue-50/60'
+                : 'border-slate-200 bg-slate-50/50'
             }`}
           >
             {ids.length === 0 && !snapshot.isDraggingOver && (
-              <div className="py-6 text-center text-[11px] text-slate-600">Arraste tickets aqui</div>
+              <div className="py-6 text-center text-[11px] text-slate-400">Arraste tickets aqui</div>
             )}
             {ids.map((id, index) => (
               <Draggable key={id} draggableId={id} index={index}>
@@ -87,8 +90,8 @@ function Column({ area, status, ids, openClient }) {
                     onClick={() => openClient(id)}
                     className={`glass cursor-pointer rounded-xl p-3 transition ${
                       dragSnapshot.isDragging
-                        ? 'rotate-1 scale-[1.03] border-cyan-400/50 shadow-[0_15px_40px_rgba(124,140,255,0.35)]'
-                        : 'hover:-translate-y-0.5 hover:border-cyan-400/30'
+                        ? 'rotate-1 scale-[1.03] shadow-lg ring-2 ring-blue-300'
+                        : 'hover:-translate-y-0.5 hover:shadow-md'
                     }`}
                   >
                     <KanbanCard id={id} />
@@ -110,7 +113,6 @@ export default function Kanban() {
   const [ticketsByColumn, setTicketsByColumn] = useState(null)
   const [ticketsById, setTicketsById] = useState({})
   const [query, setQuery] = useState('')
-  const [view, setView] = useState('ambos')
   const [showNew, setShowNew] = useState(false)
 
   useEffect(() => {
@@ -118,7 +120,7 @@ export default function Kanban() {
     async function load() {
       const { data } = await supabase
         .from('tickets')
-        .select('*, clientes:clients!tickets_cliente_id_fkey(codigo, nome), responsavel:profiles!tickets_responsavel_id_fkey(name, role)')
+        .select('*, responsavel:profiles!tickets_responsavel_id_fkey(name, role)')
         .order('criado_em', { ascending: false })
       if (!active || !data) return
       const byId = {}
@@ -189,8 +191,8 @@ export default function Kanban() {
           const t = ticketsById[id]
           if (!t) return false
           return (
-            (t.clientes?.codigo || '').toLowerCase().includes(q) ||
-            (t.clientes?.nome || '').toLowerCase().includes(q) ||
+            (t.codigo_cliente || '').toLowerCase().includes(q) ||
+            (t.nome_cliente || '').toLowerCase().includes(q) ||
             t.titulo.toLowerCase().includes(q)
           )
         })
@@ -207,51 +209,27 @@ export default function Kanban() {
     )
   }
 
-  const areas = view === 'ambos' ? Object.values(AREAS) : [view]
-
   return (
     <KanbanContext.Provider value={{ ticketsById }}>
-      <div className="mx-auto flex max-w-7xl flex-col gap-5">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="glow-text text-xl font-extrabold">Kanban</h1>
+            <h1 className="text-xl font-extrabold text-slate-800">Kanban</h1>
             <p className="text-sm text-slate-400">Arraste os tickets entre as fases para atualizar em tempo real.</p>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar cliente..."
-                className="w-40 rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm placeholder:text-slate-500 focus:border-cyan-400/50 sm:w-48"
+                className="field w-40 py-2 pl-9 sm:w-52"
               />
             </div>
 
-            <div className="flex gap-1 rounded-xl bg-white/5 p-1">
-              {[
-                { key: 'ambos', label: <Columns size={15} />, title: 'Ambos' },
-                { key: 'tecnica', label: <Laptop size={15} />, title: 'Técnica' },
-                { key: 'treinamento', label: <GraduationCap size={15} />, title: 'Treinamento' },
-              ].map((v) => (
-                <button
-                  key={v.key}
-                  title={v.title}
-                  onClick={() => setView(v.key)}
-                  className={`rounded-lg p-2 transition ${
-                    view === v.key ? 'dial text-slate-950' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {v.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setShowNew(true)}
-              className="dial flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-950 transition hover:opacity-90"
-            >
+            <button onClick={() => setShowNew(true)} className="btn-primary">
               <Plus size={15} />
               Novo
             </button>
@@ -259,30 +237,30 @@ export default function Kanban() {
         </div>
 
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className={`grid gap-6 ${areas.length > 1 ? 'lg:grid-cols-2' : ''}`}>
-            {areas.map((area) => (
+          <div className="flex flex-col gap-8">
+            {Object.values(AREAS).map((area) => (
               <section key={area} className="min-w-0">
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider">
                   {area === 'tecnica' ? (
-                    <Laptop size={15} className="text-cyan-300" />
+                    <Laptop size={15} className="text-blue-600" />
                   ) : (
-                    <GraduationCap size={15} className="text-fuchsia-300" />
+                    <GraduationCap size={15} className="text-violet-600" />
                   )}
-                  <span className={area === 'tecnica' ? 'text-cyan-300' : 'text-fuchsia-300'}>
+                  <span className={area === 'tecnica' ? 'text-blue-700' : 'text-violet-700'}>
                     {AREA_LABEL[area]}
                   </span>
-                  <span className="ml-auto rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">
+                  <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
                     {Object.values(filtered[area]).flat().length} tickets
                   </span>
                 </h2>
-                <div className="flex gap-2 overflow-x-auto pb-2">
+                <div className="flex gap-3 overflow-x-auto pb-2">
                   {STATUS_ORDER.map((status) => (
                     <Column
                       key={status}
                       area={area}
                       status={status}
                       ids={filtered[area][status]}
-                      openClient={(id) => navigate(`/clientes/${ticketsById[id].cliente_id}`)}
+                      openClient={(id) => navigate(`/clientes/${ticketsById[id].codigo_cliente}`)}
                     />
                   ))}
                 </div>
@@ -291,7 +269,7 @@ export default function Kanban() {
           </div>
         </DragDropContext>
 
-        <NewTicketModal open={showNew} onClose={() => setShowNew(false)} areaInicial={view} />
+        <NewTicketModal open={showNew} onClose={() => setShowNew(false)} />
       </div>
     </KanbanContext.Provider>
   )

@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Kanban, Users, LogOut, Zap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { ROLE_LABEL, AREA_BAR } from '../lib/constants'
+import { ROLE_LABEL, ROLE_SOLID } from '../lib/constants'
 import { initials } from '../lib/format'
 
 const NAV = [
@@ -13,11 +13,11 @@ const NAV = [
 function Brand() {
   return (
     <div className="flex items-center gap-3 px-2 py-1">
-      <div className="neon-border dial flex h-9 w-9 items-center justify-center rounded-xl text-slate-900">
+      <div className="dial flex h-9 w-9 items-center justify-center rounded-xl text-white">
         <Zap size={20} strokeWidth={2.5} />
       </div>
       <div>
-        <div className="glow-text text-sm font-extrabold tracking-wide">PAINEL</div>
+        <div className="text-sm font-extrabold tracking-wide text-slate-800">PAINEL</div>
         <div className="text-[10px] font-medium uppercase tracking-[0.25em] text-slate-400">Implantação</div>
       </div>
     </div>
@@ -34,18 +34,12 @@ function UserChip() {
     <div className="glass rounded-2xl p-3">
       <div className="flex items-center gap-3">
         <div
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-slate-950 ${
-            role === 'treinamento'
-              ? 'from-fuchsia-400 to-violet-500'
-              : role === 'admin'
-                ? 'from-amber-300 to-orange-500'
-                : AREA_BAR.tecnica
-          }`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${ROLE_SOLID[role] || 'bg-slate-500'}`}
         >
           {initials(name)}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold">{name}</div>
+          <div className="truncate text-sm font-semibold text-slate-800">{name}</div>
           <div className="text-[11px] text-slate-400">{ROLE_LABEL[role] || role}</div>
         </div>
         <button
@@ -54,7 +48,7 @@ function UserChip() {
             navigate('/dashboard')
           }}
           title="Sair"
-          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-300"
+          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
         >
           <LogOut size={16} />
         </button>
@@ -78,24 +72,17 @@ export default function Layout() {
                 className={({ isActive }) =>
                   `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     isActive
-                      ? 'text-slate-50'
-                      : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-gradient-to-b from-cyan-400 to-indigo-400 shadow-[0_0_12px_rgba(124,140,255,0.8)]" />
+                      <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-blue-600" />
                     )}
-                    <Icon
-                      size={18}
-                      className={
-                        isActive
-                          ? 'text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]'
-                          : 'text-slate-500 group-hover:text-slate-300'
-                      }
-                    />
+                    <Icon size={18} className={isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-500'} />
                     {label}
                   </>
                 )}
@@ -117,7 +104,7 @@ export default function Layout() {
                 end={end}
                 className={({ isActive }) =>
                   `flex flex-col items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-medium ${
-                    isActive ? 'text-cyan-300' : 'text-slate-400'
+                    isActive ? 'text-blue-600' : 'text-slate-400'
                   }`
                 }
               >

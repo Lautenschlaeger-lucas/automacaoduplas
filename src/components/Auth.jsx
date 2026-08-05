@@ -5,12 +5,12 @@ import { useAuth } from '../context/AuthContext'
 function Field({ label, icon: Icon, ...props }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</span>
       <div className="relative">
-        <Icon size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+        <Icon size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           {...props}
-          className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-3.5 text-sm text-slate-100 placeholder:text-slate-500 transition focus:border-cyan-400/50 focus:bg-white/[0.07] focus:shadow-[0_0_20px_rgba(34,211,238,0.15)]"
+          className="field pl-10"
         />
       </div>
     </label>
@@ -49,38 +49,38 @@ export default function Auth() {
     <div className="bg-space flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="neon-border dial flex h-14 w-14 items-center justify-center rounded-2xl text-slate-900 shadow-[0_0_40px_rgba(124,140,255,0.45)]">
+          <div className="dial flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg">
             <Zap size={28} strokeWidth={2.5} />
           </div>
           <div className="text-center">
-            <h1 className="glow-text text-xl font-extrabold tracking-wide">PAINEL DE IMPLANTAÇÃO</h1>
+            <h1 className="text-xl font-extrabold tracking-wide text-slate-800">PAINEL DE IMPLANTAÇÃO</h1>
             <p className="text-xs text-slate-400">Técnica & Treinamento em um só lugar</p>
           </div>
         </div>
 
-        <div className="glass-strong neon-border rounded-2xl p-6">
+        <div className="glass-strong rounded-2xl p-6">
           {created ? (
             <div className="py-6 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-400/10 text-emerald-300">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                 <Zap size={22} />
               </div>
-              <h2 className="font-bold">Conta criada!</h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Confirme o e-mail de verificação enviado para <b className="text-slate-200">{email}</b> e depois faça login.
+              <h2 className="font-bold text-slate-800">Conta criada!</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Confirme o e-mail de verificação enviado para <b className="text-slate-700">{email}</b> e depois faça login.
               </p>
               <button
                 onClick={() => {
                   setCreated(false)
                   setMode('login')
                 }}
-                className="mt-4 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold transition hover:bg-white/15"
+                className="btn-ghost mt-4 w-full"
               >
                 Ir para o login
               </button>
             </div>
           ) : (
             <>
-              <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-white/5 p-1">
+              <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
                 {[
                   { key: 'login', label: 'Entrar' },
                   { key: 'cadastro', label: 'Criar conta' },
@@ -93,8 +93,8 @@ export default function Auth() {
                     }}
                     className={`rounded-lg py-2 text-sm font-semibold transition ${
                       mode === t.key
-                        ? 'dial text-slate-950 shadow'
-                        : 'text-slate-400 hover:text-slate-200'
+                        ? 'dial shadow'
+                        : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
                     {t.label}
@@ -135,17 +135,13 @@ export default function Auth() {
                 />
 
                 {error && (
-                  <div className="flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-xs text-rose-300">
+                  <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-600">
                     <AlertCircle size={14} className="mt-0.5 shrink-0" />
                     <span>{error}</span>
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="dial mt-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-slate-950 shadow-[0_8px_30px_rgba(124,140,255,0.35)] transition hover:opacity-90 disabled:opacity-60"
-                >
+                <button type="submit" disabled={busy} className="btn-primary mt-1 w-full">
                   {busy && <Loader2 size={16} className="animate-spin" />}
                   {mode === 'login' ? 'Entrar' : 'Criar conta'}
                 </button>
@@ -154,7 +150,7 @@ export default function Auth() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-[11px] text-slate-500">
+        <p className="mt-6 text-center text-[11px] text-slate-400">
           Projeto interno · Painel de Implantação
         </p>
       </div>
