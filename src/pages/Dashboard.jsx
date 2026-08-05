@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Users, ClipboardList, PlayCircle, AlertTriangle, Plus, TrendingUp } from 'lucide-react'
+import { Users, ClipboardList, PlayCircle, AlertTriangle, Plus, TrendingUp, Laptop, GraduationCap } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { STATUS, AREAS, AREA_BAR, AREA_CHIP, AREA_LABEL } from '../lib/constants'
@@ -100,18 +100,27 @@ export default function Dashboard() {
 
     const recent = [...t].sort((a, b) => new Date(b.atualizado_em) - new Date(a.atualizado_em)).slice(0, 5)
 
+    const comigo = t.filter((x) => x.responsavel_id === profile?.id)
+    const comTreinamento = t.filter((x) => x.responsavel?.role === 'treinamento')
+    const treinador = collabs.find((c) => c.role === 'treinamento')
+
     return {
       totalClients: codes.length,
       ativos: activeCodes.length,
       abertos: t.filter((x) => x.status === STATUS.ABERTO).length,
       andamento: t.filter((x) => x.status === STATUS.EM_ANDAMENTO).length,
       pendencias: t.filter((x) => x.status === STATUS.PENDENCIA).length,
+      comigo: comigo.length,
+      comigoAndamento: comigo.filter((x) => x.status === STATUS.EM_ANDAMENTO).length,
+      comigoPend: comigo.filter((x) => x.status === STATUS.PENDENCIA).length,
+      comTreinamento: comTreinamento.length,
+      treinadorNome: treinador?.name?.split(' ')[0],
       perCollab,
       perArea,
       maxCollab: Math.max(...perCollab.map((c) => c.total), 1),
       recent,
     }
-  }, [tickets, collabs])
+  }, [tickets, collabs, profile])
 
   if (!stats) {
     return (
@@ -141,6 +150,23 @@ export default function Dashboard() {
         <KpiCard icon={ClipboardList} label="Tickets abertos" value={stats.abertos} accent="bg-sky-50 text-sky-600" />
         <KpiCard icon={PlayCircle} label="Em andamento" value={stats.andamento} accent="bg-amber-50 text-amber-600" />
         <KpiCard icon={AlertTriangle} label="Pendências" value={stats.pendencias} accent="bg-rose-50 text-rose-600" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <KpiCard
+          icon={Laptop}
+          label="Comigo"
+          value={stats.comigo}
+          sub={`${stats.comigoAndamento} em andamento · ${stats.comigoPend} pendências`}
+          accent="bg-blue-50 text-blue-600"
+        />
+        <KpiCard
+          icon={GraduationCap}
+          label="Com o treinamento"
+          value={stats.comTreinamento}
+          sub={stats.treinadorNome ? `com ${stats.treinadorNome}` : 'Sem treinador definido'}
+          accent="bg-violet-50 text-violet-600"
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-5">
