@@ -284,6 +284,7 @@ export default function ClientDetail() {
         open={!!activeTicket}
         ticket={activeTicket}
         onClose={() => setActiveTicket(null)}
+        onOpenTicket={setActiveTicket}
       />
     </div>
   )

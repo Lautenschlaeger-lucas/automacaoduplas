@@ -275,6 +275,7 @@ export default function Kanban() {
           open={!!activeTicket}
           ticket={activeTicket}
           onClose={() => setActiveTicket(null)}
+          onOpenTicket={setActiveTicket}
         />
       </div>
     </KanbanContext.Provider>
