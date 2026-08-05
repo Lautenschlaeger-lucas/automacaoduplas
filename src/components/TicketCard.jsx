@@ -17,7 +17,7 @@ export function TicketCard({ ticket, showArea = false, onOpen }) {
   const Wrap = onOpen ? 'div' : Link
   const props = onOpen
     ? { role: 'button', tabIndex: 0, onClick: () => onOpen(ticket), className: 'cursor-pointer' }
-    : { to: `/clientes/${ticket.codigo_cliente}`, className: 'block' }
+    : { to: `/projetos/${ticket.codigo_cliente}`, className: 'block' }
 
   return (
     <Wrap {...props} className="group">

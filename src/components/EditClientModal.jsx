@@ -54,17 +54,17 @@ export default function EditClientModal({ open, onClose, onSaved, client }) {
       onSaved?.()
       onClose()
     } catch (err) {
-      setError(err.message || 'Erro ao salvar cliente.')
+      setError(err.message || 'Erro ao salvar projeto.')
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={`Editar cliente #${form.codigo_cliente}`} wide>
+    <Modal open={open} onClose={onClose} title={`Editar projeto #${form.codigo_cliente}`} wide>
       <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
         <label className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Nome do cliente *</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Nome do projeto *</span>
           <input
             required
             value={form.nome_cliente}

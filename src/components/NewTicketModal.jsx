@@ -99,7 +99,7 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
           .insert([
             {
               ...payload,
-              titulo: form.titulo || form.nome_cliente || `Cliente ${code}`,
+              titulo: form.titulo || form.nome_cliente || `Projeto ${code}`,
             },
           ])
           .select('id')
@@ -134,7 +134,7 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
       <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
         <label className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-            Código do cliente *
+            Código do projeto *
           </span>
           <input
             required
@@ -145,14 +145,14 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
           />
           {existing && (
             <span className="mt-1 flex items-center gap-1 text-[11px] text-emerald-600">
-              <Info size={12} /> Cliente já existente — nome preenchido automaticamente
+              <Info size={12} /> Projeto já existente — nome preenchido automaticamente
             </span>
           )}
         </label>
 
         <label className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-            Nome do cliente *
+            Nome do projeto *
           </span>
           <input
             required

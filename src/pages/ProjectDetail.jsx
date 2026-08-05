@@ -92,7 +92,7 @@ export default function ClientDetail() {
   }, [codigo])
 
   async function removeClient() {
-    if (!confirm(`Excluir o cliente #${codigo} e todos os seus tickets?`)) return
+    if (!confirm(`Excluir o projeto #${codigo} e todos os seus tickets?`)) return
     const { error } = await supabase.from('tickets').delete().eq('codigo_cliente', codigo)
     if (!error) navigate('/kanban')
   }
@@ -106,6 +106,7 @@ export default function ClientDetail() {
   }
 
   const info = tickets[0] || {}
+  const parent = tickets.find((t) => !t.parent_id)
   const total = tickets.length
   const done = tickets.filter((t) => t.status === STATUS.CONCLUIDO).length
   const pct = total ? Math.round((done / total) * 100) : 0
@@ -148,13 +149,15 @@ export default function ClientDetail() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-extrabold text-slate-800 sm:text-2xl">
-                  Cliente #{codigo}
+                  Projeto #{codigo}
                 </h1>
                 <span className={`rounded-md border px-2 py-0.5 text-[11px] font-semibold ${CLIENT_STATUS_CHIP[clientStatus]}`}>
                   {CLIENT_STATUS_LABEL[clientStatus]}
                 </span>
               </div>
-              <h2 className="text-sm font-semibold text-slate-500">{info.nome_cliente || 'Sem nome'}</h2>
+              <h2 className="text-sm font-semibold text-slate-500">
+                {parent?.titulo || info.nome_cliente || 'Sem nome'}
+              </h2>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -165,7 +168,7 @@ export default function ClientDetail() {
             <button
               onClick={() => setEditing(true)}
               className="btn-ghost"
-              title="Editar cliente"
+              title="Editar projeto"
             >
               <Pencil size={15} />
             </button>
@@ -173,7 +176,7 @@ export default function ClientDetail() {
               <button
                 onClick={removeClient}
                 className="btn-ghost hover:text-rose-500"
-                title="Excluir cliente"
+                title="Excluir projeto"
               >
                 <Trash2 size={15} />
               </button>

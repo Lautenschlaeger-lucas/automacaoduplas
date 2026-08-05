@@ -188,10 +188,10 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => navigate(`/clientes/${ticket.codigo_cliente}`)}
+              onClick={() => navigate(`/projetos/${ticket.codigo_cliente}`)}
               className="flex items-center gap-1 text-xs font-semibold text-blue-600 transition hover:text-blue-700"
             >
-              <ExternalLink size={13} /> Editar dados do cliente
+              <ExternalLink size={13} /> Editar dados do projeto
             </button>
             <button type="button" onClick={() => setShowNew(true)} className="btn-primary !px-3 !py-1.5 text-xs">
               <Plus size={14} /> Novo ticket
