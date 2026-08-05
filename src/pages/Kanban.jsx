@@ -225,7 +225,8 @@ export default function Kanban() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar cliente..."
-                className="field w-40 py-2 pl-9 sm:w-52"
+                className="field w-40 py-2 sm:w-52"
+                style={{ paddingLeft: '2.25rem' }}
               />
             </div>
 
