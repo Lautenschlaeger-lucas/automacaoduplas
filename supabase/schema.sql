@@ -64,8 +64,6 @@ end
 $$;
 
 create index if not exists tickets_parent_idx on public.tickets (parent_id);
--- 1 ticket pai por cliente (sem parent_id = ticket geral)
-create unique index if not exists tickets_pai_unico on public.tickets (codigo_cliente) where parent_id is null;
 
 -- ---------- TABELA: PROCESSOS (checklist dos processos ja feitos do ticket pai) ----------
 create table if not exists public.processos (
@@ -130,6 +128,9 @@ from pais p
 where t.codigo_cliente = p.codigo_cliente
   and t.id <> p.id
   and t.parent_id is null;
+
+-- 1 ticket pai por cliente (sem parent_id = ticket geral) — criado apos o backfill
+create unique index if not exists tickets_pai_unico on public.tickets (codigo_cliente) where parent_id is null;
 
 -- mantem atualizado_em e calcula concluido_em automaticamente
 create or replace function public.set_tickets_updated_at()
