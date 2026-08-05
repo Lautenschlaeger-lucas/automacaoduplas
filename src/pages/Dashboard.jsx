@@ -68,7 +68,7 @@ function CollabBar({ label, value, max, barCls }) {
 }
 
 export default function Dashboard() {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const [tickets, setTickets] = useState(null)
   const [processos, setProcessos] = useState([])
@@ -90,10 +90,6 @@ export default function Dashboard() {
       setProcessos(pr.data || [])
     })
   }, [])
-
-  useEffect(() => {
-    if (profile && !isAdmin) setFiltro(profile.id)
-  }, [profile, isAdmin])
 
   const visiveis = useMemo(() => {
     if (!tickets) return null
@@ -262,25 +258,27 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {isAdmin ? (
-            <select
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              className="field w-48 !py-2"
-              title="Filtrar relatórios por responsável"
-            >
-              <option value="todos">Todos os responsáveis</option>
-              {collabs.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
-              Meus projetos
-            </span>
-          )}
+          <select
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="field w-48 !py-2"
+            title="Filtrar relatórios por responsável"
+          >
+            <option value="todos">Todos os responsáveis</option>
+            {user && (
+              <option value={user.id}>
+                Meus tickets{profile?.name ? ` (${profile.name.split(' ')[0]})` : ''}
+              </option>
+            )}
+            {isAdmin &&
+              collabs
+                .filter((c) => c.id !== user?.id)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+          </select>
           <button onClick={() => setShowNew(true)} className="btn-primary">
             <Plus size={16} />
             Novo ticket
