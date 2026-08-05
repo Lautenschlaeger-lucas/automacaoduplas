@@ -72,7 +72,16 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
     setError('')
     try {
       const code = form.codigo_cliente.trim()
-      const payload = { ...form, codigo_cliente: code, criado_por: user.id }
+      const payload = {
+        codigo_cliente: code,
+        nome_cliente: form.nome_cliente,
+        titulo: form.titulo,
+        descricao: form.descricao,
+        area: form.area,
+        prioridade: form.prioridade,
+        responsavel_id: form.responsavel_id,
+        criado_por: user.id,
+      }
 
       const { data: pais } = await supabase
         .from('tickets')
@@ -81,37 +90,36 @@ export default function NewTicketModal({ open, onClose, onSaved, codigoInicial, 
         .is('parent_id', null)
         .limit(1)
 
-      let parentId = pais?.[0]?.id
-
-      if (!parentId) {
+      if (pais?.[0]?.id) {
+        const { error: err } = await supabase.from('tickets').insert([{ ...payload, parent_id: pais[0].id }])
+        if (err) throw err
+      } else {
         const { data: pai, error: paiErr } = await supabase
           .from('tickets')
           .insert([
             {
-              codigo_cliente: code,
-              nome_cliente: form.nome_cliente,
-              titulo: form.nome_cliente || `Cliente ${code}`,
-              area: form.area,
-              criado_por: user.id,
+              ...payload,
+              titulo: form.titulo || form.nome_cliente || `Cliente ${code}`,
             },
           ])
           .select('id')
           .single()
         if (paiErr) {
-          const { data: jaExiste } = await supabase
+          const { data: outroPai } = await supabase
             .from('tickets')
             .select('id')
             .eq('codigo_cliente', code)
             .is('parent_id', null)
             .limit(1)
-          parentId = jaExiste?.[0]?.id
-        } else {
-          parentId = pai?.id
+          const realParent = outroPai?.[0]?.id
+          if (realParent) {
+            const { error: err2 } = await supabase.from('tickets').insert([{ ...payload, parent_id: realParent }])
+            if (err2) throw err2
+          } else {
+            throw paiErr
+          }
         }
       }
-
-      const { error: err } = await supabase.from('tickets').insert([{ ...payload, parent_id: parentId }])
-      if (err) throw err
       onSaved?.()
       onClose()
     } catch (err) {

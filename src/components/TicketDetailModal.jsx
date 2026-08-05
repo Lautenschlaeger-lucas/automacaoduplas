@@ -122,6 +122,20 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
     }
   }
 
+  async function handleDelete() {
+    const msg = isParent
+      ? `Excluir o ticket geral #${ticket.codigo_cliente} e TODOS os seus tickets e processos?`
+      : 'Excluir este ticket?'
+    if (!confirm(msg)) return
+    const { error } = await supabase.from('tickets').delete().eq('id', ticket.id)
+    if (error) {
+      setError(error.message || 'Erro ao excluir ticket.')
+      return
+    }
+    onSaved?.()
+    onClose()
+  }
+
   async function addProcesso(e) {
     e.preventDefault()
     const titulo = novoProcesso.trim()
@@ -181,6 +195,14 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
             </button>
             <button type="button" onClick={() => setShowNew(true)} className="btn-primary !px-3 !py-1.5 text-xs">
               <Plus size={14} /> Novo ticket
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="btn-ghost !px-2.5 !py-1.5 hover:text-rose-500"
+              title="Excluir ticket"
+            >
+              <Trash2 size={14} />
             </button>
           </div>
         </div>

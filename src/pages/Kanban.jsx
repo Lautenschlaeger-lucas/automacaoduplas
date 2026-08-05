@@ -134,10 +134,12 @@ export default function Kanban() {
         cols[area] = {}
         STATUS_ORDER.forEach((s) => (cols[area][s] = []))
       })
-      data.forEach((t) => {
-        byId[t.id] = t
-        cols[t.area][t.status].push(t.id)
-      })
+      data
+        .filter((t) => !t.parent_id)
+        .forEach((t) => {
+          byId[t.id] = t
+          cols[t.area][t.status].push(t.id)
+        })
       setTicketsById(byId)
       setTicketsByColumn(cols)
     }

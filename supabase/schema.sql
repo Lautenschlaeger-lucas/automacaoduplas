@@ -178,28 +178,30 @@ drop policy if exists "tickets: leitura autenticados" on public.tickets;
 drop policy if exists "tickets: criacao autenticados" on public.tickets;
 drop policy if exists "tickets: edicao autenticados" on public.tickets;
 drop policy if exists "tickets: admin deleta" on public.tickets;
+drop policy if exists "tickets: delete autenticados" on public.tickets;
 create policy "tickets: leitura autenticados" on public.tickets
   for select using (auth.role() = 'authenticated');
 create policy "tickets: criacao autenticados" on public.tickets
   for insert with check (auth.role() = 'authenticated');
 create policy "tickets: edicao autenticados" on public.tickets
   for update using (auth.role() = 'authenticated');
-create policy "tickets: admin deleta" on public.tickets
-  for delete using (public.is_admin());
+create policy "tickets: delete autenticados" on public.tickets
+  for delete using (auth.role() = 'authenticated');
 
 -- processos
 drop policy if exists "processos: leitura autenticados" on public.processos;
 drop policy if exists "processos: criacao autenticados" on public.processos;
 drop policy if exists "processos: edicao autenticados" on public.processos;
 drop policy if exists "processos: admin deleta" on public.processos;
+drop policy if exists "processos: delete autenticados" on public.processos;
 create policy "processos: leitura autenticados" on public.processos
   for select using (auth.role() = 'authenticated');
 create policy "processos: criacao autenticados" on public.processos
   for insert with check (auth.role() = 'authenticated');
 create policy "processos: edicao autenticados" on public.processos
   for update using (auth.role() = 'authenticated');
-create policy "processos: admin deleta" on public.processos
-  for delete using (public.is_admin());
+create policy "processos: delete autenticados" on public.processos
+  for delete using (auth.role() = 'authenticated');
 
 -- ---------- REALTIME (adiciona so se ainda nao estiver) ----------
 do $$
