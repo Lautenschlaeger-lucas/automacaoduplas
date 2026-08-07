@@ -331,7 +331,7 @@ export default function Dashboard() {
         {projetos.length === 0 ? (
           <EmptyState title="Nenhum projeto ainda" hint="Crie o primeiro ticket no Kanban." />
         ) : (
-          <div className="flex flex-col divide-y divide-slate-100">
+          <div className="flex max-h-[70vh] flex-col divide-y divide-slate-100 overflow-y-auto pr-1">
             {projetos.map((p) => (
               <Link
                 key={p.codigo}
