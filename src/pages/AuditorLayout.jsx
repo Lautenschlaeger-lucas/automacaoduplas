@@ -9,8 +9,8 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { ClipboardCheck, Activity, Settings } from 'lucide-react'
 
 const TABS = [
-  { to: '/auditor', label: 'Auditoria', icon: ClipboardCheck, end: true },
-  { to: '/auditor/monitor', label: 'Monitoramento', icon: Activity, end: false },
+  { to: '/auditor', label: 'Monitoramento', icon: Activity, end: true },
+  { to: '/auditor/auditoria', label: 'Auditoria', icon: ClipboardCheck, end: true },
   { to: '/auditor/config', label: 'Configuração', icon: Settings, end: false },
 ]
 

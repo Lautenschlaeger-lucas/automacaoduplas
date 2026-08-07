@@ -37,8 +37,8 @@ export default function App() {
           <Route path="/importar" element={<ImportCsv />} />
           <Route path="/projetos/:codigo" element={<ProjectDetail />} />
           <Route path="/auditor" element={<AuditorLayout />}>
-            <Route path="" element={<AuditorAuditoria />} />
-            <Route path="monitor" element={<AuditorMonitor />} />
+            <Route path="" element={<AuditorMonitor />} />
+            <Route path="auditoria" element={<AuditorAuditoria />} />
             <Route path="config" element={<AuditorConfig />} />
           </Route>
         </Route>
