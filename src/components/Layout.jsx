@@ -46,12 +46,14 @@ function UserChip({ collapsed }) {
       <div className="relative flex justify-center">
         <button
           onClick={() => setOpen((v) => !v)}
-          title={open ? 'Fechar' : 'Menu do usuário'}
-          className={`relative flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm transition ring-2 ${
+          className={`group relative flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm transition ring-2 ${
             open ? 'ring-blue-500' : 'ring-slate-200 hover:ring-slate-300'
           } ${ROLE_SOLID[role] || 'bg-slate-500'}`}
         >
           {initials(name)}
+          <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            {open ? 'Fechar' : 'Menu do usuário'}
+          </span>
         </button>
 
         {open && (
@@ -151,14 +153,16 @@ export default function Layout() {
           </nav>
         </div>
 
-        <div className={`flex flex-col items-center gap-3 ${collapsed ? '' : 'items-stretch'}`}>
+        <div className="flex flex-col gap-3">
           <UserChip collapsed={collapsed} />
           <button
             onClick={() => setCollapsed((v) => !v)}
-            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="group relative self-end rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           >
             {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            <span className="pointer-events-none absolute right-full top-1/2 z-50 mr-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+              {collapsed ? 'Expandir menu' : 'Recolher menu'}
+            </span>
           </button>
         </div>
       </aside>
