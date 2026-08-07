@@ -156,14 +156,14 @@ export default function AuditorMonitor() {
       <AuditorTitle />
 
       {/* Controles */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <select className="field w-auto" value={teamId} onChange={(e) => onTeamChange(e.target.value)} disabled={monitoring}>
+      <div className="mb-4 flex flex-nowrap items-center gap-2">
+        <select className="field" style={{ width: 'auto' }} value={teamId} onChange={(e) => onTeamChange(e.target.value)} disabled={monitoring}>
           <option value="">Selecione um time</option>
           {teams.map((t) => (
             <option key={t.id} value={t.id}>{t.name || t.title || t.label || t.id}</option>
           ))}
         </select>
-        <select className="field w-auto" value={agentId} onChange={(e) => setAgentId(e.target.value)} disabled={monitoring}>
+        <select className="field" style={{ width: 'auto' }} value={agentId} onChange={(e) => setAgentId(e.target.value)} disabled={monitoring}>
           <option value="">{members.length ? 'Selecione um atendente' : 'Escolha um time primeiro'}</option>
           {members.map((m) => {
             const mid = m.user_id != null ? m.user_id : m.id
