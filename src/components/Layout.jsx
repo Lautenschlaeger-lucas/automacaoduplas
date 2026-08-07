@@ -160,7 +160,9 @@ export default function Layout() {
             className="group relative self-end rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           >
             {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-            <span className="pointer-events-none absolute right-full top-1/2 z-50 mr-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className={`pointer-events-none absolute top-1/2 z-50 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 ${
+              collapsed ? 'left-full ml-3' : 'right-full mr-3'
+            }`}>
               {collapsed ? 'Expandir menu' : 'Recolher menu'}
             </span>
           </button>
