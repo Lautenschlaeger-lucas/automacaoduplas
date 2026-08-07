@@ -20,7 +20,7 @@ export function AuditorFooter() {
       <p className="text-xs font-medium text-slate-400">
         Auditor Chatwoot · módulo integrado ao Painel de Implantação
         <span className="mx-2 text-slate-300">•</span>
-        Desenvolvido e implementado por: <span className="font-bold text-slate-600">EES-EndersonE.Souza</span>
+        Desenvolvido e implementado por: <span className="font-bold text-slate-600">EES-EndersonESouza</span>
       </p>
     </footer>
   )

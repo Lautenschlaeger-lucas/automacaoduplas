@@ -41,4 +41,4 @@ export const STATUS_TONE = {
 }
 
 // Assinatura de desenvolvimento (rodape visivel + marca RNA oculta)
-export const CREDITO = 'Desenvolvido e implementado por: EES-EndersonE.Souza'
+export const CREDITO = 'Desenvolvido e implementado por: EES-EndersonESouza'
