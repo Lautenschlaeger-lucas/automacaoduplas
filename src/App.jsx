@@ -5,6 +5,7 @@ import Auth from './components/Auth'
 import Dashboard from './pages/Dashboard'
 import Kanban from './pages/Kanban'
 import ProjectDetail from './pages/ProjectDetail'
+import ImportCsv from './pages/ImportCsv'
 
 function Loader() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/kanban" element={<Kanban />} />
+          <Route path="/importar" element={<ImportCsv />} />
           <Route path="/projetos/:codigo" element={<ProjectDetail />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
