@@ -95,3 +95,13 @@ export const ROLE_SOLID = {
   tecnica: 'bg-blue-500',
   treinamento: 'bg-violet-500',
 }
+
+// Fluxo de implantacao: ticket geral concluido na area tecnica vai automaticamente
+// para 'aberto' na area de treinamento.
+export function FLUXO_TECNICA_TREINAMENTO(payload, isParent) {
+  if (!isParent) return payload
+  if (payload.area === AREAS.TECNICA && payload.status === STATUS.CONCLUIDO) {
+    return { ...payload, area: AREAS.TREINAMENTO, status: STATUS.ABERTO }
+  }
+  return payload
+}

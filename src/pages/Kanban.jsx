@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Plus, Search, Laptop, GraduationCap, Wrench } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP } from '../lib/constants'
+import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP, FLUXO_TECNICA_TREINAMENTO } from '../lib/constants'
 import { Spinner } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
 import TicketDetailModal from '../components/TicketDetailModal'
@@ -173,30 +173,38 @@ export default function Kanban() {
 
     const [srcArea, srcStatus] = source.droppableId.split(':')
     const [dstArea, dstStatus] = destination.droppableId.split(':')
+    const moved = ticketsById[draggableId]
+
+    const alvo = FLUXO_TECNICA_TREINAMENTO(
+      { area: dstArea, status: dstStatus },
+      !moved?.parent_id
+    )
 
     setTicketsByColumn((prev) => {
       const cols = JSON.parse(JSON.stringify(prev))
       const srcList = cols[srcArea][srcStatus]
-      const [moved] = srcList.splice(source.index, 1)
-      const dstList = cols[dstArea][dstStatus]
-      dstList.splice(destination.index, 0, moved)
+      const [card] = srcList.splice(source.index, 1)
+      const dstList = cols[alvo.area][alvo.status]
+      dstList.splice(destination.index, 0, card)
       return cols
     })
 
-    if (srcArea === dstArea && srcStatus === dstStatus) return
+    if (srcArea === alvo.area && srcStatus === alvo.status) return
 
     const patch = {}
-    if (srcStatus !== dstStatus) patch.status = dstStatus
-    if (srcArea !== dstArea) patch.area = dstArea
+    if (srcStatus !== alvo.status) patch.status = alvo.status
+    if (srcArea !== alvo.area) patch.area = alvo.area
 
-    const moved = ticketsById[draggableId]
-    if (!moved?.responsavel_id && (dstStatus === STATUS.EM_ANDAMENTO || dstStatus === STATUS.PENDENCIA)) {
+    if (!moved?.responsavel_id && (alvo.status === STATUS.EM_ANDAMENTO || alvo.status === STATUS.PENDENCIA)) {
       patch.responsavel_id = user?.id
       setTicketsById((prev) => ({ ...prev, [draggableId]: { ...prev[draggableId], responsavel_id: user?.id } }))
     }
 
-    if (srcArea !== dstArea) {
-      setTicketsById((prev) => ({ ...prev, [draggableId]: { ...prev[draggableId], area: dstArea } }))
+    if (srcArea !== alvo.area) {
+      setTicketsById((prev) => ({ ...prev, [draggableId]: { ...prev[draggableId], area: alvo.area } }))
+    }
+    if (srcStatus !== alvo.status) {
+      setTicketsById((prev) => ({ ...prev, [draggableId]: { ...prev[draggableId], status: alvo.status } }))
     }
 
     const { error } = await supabase.from('tickets').update(patch).eq('id', draggableId)

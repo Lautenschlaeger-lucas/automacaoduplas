@@ -21,6 +21,7 @@ import {
   STATUS_LABEL,
   STATUS_CHIP,
   PRIORITY_LABEL,
+  FLUXO_TECNICA_TREINAMENTO,
 } from '../lib/constants'
 
 export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOpenTicket }) {
@@ -112,8 +113,10 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
     setBusy(true)
     setError('')
     try {
-      const { error: err } = await supabase.from('tickets').update(form).eq('id', ticket.id)
+      const payload = FLUXO_TECNICA_TREINAMENTO({ ...form }, isParent)
+      const { error: err } = await supabase.from('tickets').update(payload).eq('id', ticket.id)
       if (err) throw err
+      setForm(payload)
       onSaved?.()
     } catch (err) {
       setError(err.message || 'Erro ao salvar ticket.')
