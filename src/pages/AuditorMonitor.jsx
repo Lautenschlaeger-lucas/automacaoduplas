@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  Play, Square, Loader2, Send, Sparkles, Bell, AlertTriangle,
+  Play, Square, Loader2, Send, Sparkles, Bell, AlertTriangle, MessageSquare, Inbox,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import {
@@ -31,13 +31,31 @@ export default function AuditorMonitor() {
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [toast, setToast] = useState(null)
   const [alerts, setAlerts] = useState([])
+  const [teamsError, setTeamsError] = useState('')
+  const [loadingTeams, setLoadingTeams] = useState(true)
   const channelRef = useRef(null)
   const msgChannelRef = useRef(null)
 
   useEffect(() => {
-    listarTeams()
-      .then((data) => setTeams(Array.isArray(data) ? data : []))
-      .catch(() => setTeams([]))
+    async function loadTeams() {
+      setLoadingTeams(true)
+      setTeamsError('')
+      try {
+        const data = await listarTeams()
+        if (Array.isArray(data) && data.length) {
+          setTeams(data)
+        } else {
+          setTeams([])
+          setTeamsError('Nenhum time retornado pelo Chatwoot. Verifique a conexão e os secrets da Edge Function (chatwoot_proxy).')
+        }
+      } catch (e) {
+        setTeams([])
+        setTeamsError(e?.message || 'Não foi possível carregar os times.')
+      } finally {
+        setLoadingTeams(false)
+      }
+    }
+    loadTeams()
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current)
       if (msgChannelRef.current) supabase.removeChannel(msgChannelRef.current)
@@ -157,8 +175,8 @@ export default function AuditorMonitor() {
 
       {/* Controles */}
       <div className="mb-4 flex flex-nowrap items-center gap-2">
-        <select className="field" style={{ width: 'auto' }} value={teamId} onChange={(e) => onTeamChange(e.target.value)} disabled={monitoring}>
-          <option value="">Selecione um time</option>
+        <select className="field" style={{ width: 'auto' }} value={teamId} onChange={(e) => onTeamChange(e.target.value)} disabled={monitoring || loadingTeams}>
+          <option value="">{loadingTeams ? 'Carregando times...' : 'Selecione um time'}</option>
           {teams.map((t) => (
             <option key={t.id} value={t.id}>{t.name || t.title || t.label || t.id}</option>
           ))}
@@ -183,15 +201,27 @@ export default function AuditorMonitor() {
         )}
       </div>
 
+      {teamsError && (
+        <div className="mb-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <span><strong>Falha ao carregar times:</strong> {teamsError}</span>
+        </div>
+      )}
+
       {/* Corpo */}
       <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
         {/* Lista */}
         <div className="rounded-2xl border border-slate-200 bg-slate-50/50">
           {conversations.length === 0 ? (
-            <p className="p-8 text-center text-sm text-slate-400">
-              Nenhuma conversa encontrada.
-              <br /><span className="text-xs">Selecione um time e atendente e inicie o monitoramento.</span>
-            </p>
+            <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100">
+                <Inbox size={20} className="text-slate-400" />
+              </div>
+              <p className="text-sm font-semibold text-slate-500">Nenhuma conversa encontrada</p>
+              <p className="text-xs text-slate-400">
+                Selecione um time e atendente e inicie o monitoramento.
+              </p>
+            </div>
           ) : (
             <div className="max-h-[60vh] overflow-y-auto">
               {conversations.map((c) => {
@@ -212,7 +242,7 @@ export default function AuditorMonitor() {
                     </div>
                     <div className="mt-0.5 flex items-center justify-between gap-2">
                       <span className="text-xs text-slate-400">{c.assignee_name || '—'}</span>
-                      <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase ${STATUS_TONE[c.status] || STATUS_LABEL.def}`}>
+                      <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase ${STATUS_TONE[c.status] || STATUS_TONE.def}`}>
                         {STATUS_LABEL[c.status] || c.status}
                       </span>
                     </div>
@@ -227,8 +257,12 @@ export default function AuditorMonitor() {
         {/* Detalhe */}
         <div className="flex h-[60vh] flex-col rounded-2xl border border-slate-200 bg-white">
           {!selected ? (
-            <div className="m-auto text-center text-sm text-slate-400">
-              <p>Selecione uma conversa para ver as mensagens.</p>
+            <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                <MessageSquare size={22} className="text-slate-400" />
+              </div>
+              <p className="text-sm font-semibold text-slate-500">Nenhuma conversa selecionada</p>
+              <p className="text-xs text-slate-400">Clique em uma conversa da lista para ver as mensagens.</p>
             </div>
           ) : (
             <>
@@ -236,15 +270,21 @@ export default function AuditorMonitor() {
                 <div>
                   <p className="text-sm font-bold text-slate-800">{selected.contact_name || 'Desconhecido'}</p>
                   <p className="text-xs text-slate-400">
-                    {selected.assignee_name || '—'} · {selected.inbox_name || '—'} · {STATUS_LABEL[selected.status] || selected.status}
+                    {selected.assignee_name || '—'} · {selected.inbox_name || '—'}
                   </p>
                 </div>
+                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase ${STATUS_TONE[selected.status] || STATUS_TONE.def}`}>
+                  {STATUS_LABEL[selected.status] || selected.status}
+                </span>
               </div>
 
               <div className="flex-1 space-y-3 overflow-y-auto p-4">
                 {loadingMessages && <Loader2 className="mx-auto h-5 w-5 animate-spin text-slate-300" />}
                 {!loadingMessages && messages.length === 0 && (
-                  <p className="text-center text-xs text-slate-400">Nenhuma mensagem encontrada.</p>
+                  <div className="flex flex-col items-center gap-2 py-10 text-center">
+                    <MessageSquare size={20} className="text-slate-300" />
+                    <p className="text-xs text-slate-400">Nenhuma mensagem encontrada nesta conversa.</p>
+                  </div>
                 )}
                 {messages.map((m) => {
                   const isAgent = String(m.sender_type || '').toLowerCase() !== 'contact'

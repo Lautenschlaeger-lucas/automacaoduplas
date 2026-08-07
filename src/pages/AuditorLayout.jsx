@@ -18,7 +18,7 @@ export function AuditorFooter() {
   return (
     <footer className="mt-8 border-t border-slate-200 pb-10 pt-4 text-center">
       <p className="text-xs font-medium text-slate-400">
-        Auditor Chatwoot · módulo integrado ao Painel de Implantação
+        Monitor ChatWoot · módulo integrado ao Painel de Implantação
         <span className="mx-2 text-slate-300">•</span>
         Desenvolvido e implementado por: <span className="font-bold text-slate-600">EES-EndersonESouza</span>
       </p>
@@ -29,8 +29,8 @@ export function AuditorFooter() {
 export function AuditorTitle() {
   return (
     <div className="mb-5">
-      <h1 className="text-xl font-extrabold tracking-tight text-slate-800">Auditor Chatwoot</h1>
-      <p className="text-sm text-slate-400">Análise de atendimento via IA no WhatsApp</p>
+      <h1 className="text-xl font-extrabold tracking-tight text-slate-800">Monitor ChatWoot</h1>
+      <p className="text-sm text-slate-400">Monitoramento e auditoria de atendimento via IA</p>
     </div>
   )
 }

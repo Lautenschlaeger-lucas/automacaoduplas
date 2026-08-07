@@ -38,6 +38,7 @@ export const STATUS_TONE = {
   resolved: 'text-slate-600 bg-slate-100 border-slate-200',
   closed: 'text-slate-500 bg-slate-100 border-slate-200',
   snoozed: 'text-slate-500 bg-slate-100 border-slate-200',
+  def: 'text-slate-600 bg-slate-100 border-slate-200',
 }
 
 // Assinatura de desenvolvimento (rodape visivel + marca RNA oculta)

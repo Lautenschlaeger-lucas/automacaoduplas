@@ -7,8 +7,8 @@
 
 import { useState } from 'react'
 import {
-  Search, User, Building2, Mail, Phone, FileDown, FileText,
-  Sparkles, Loader2, RotateCcw,
+  Search, Building2, Mail, Phone, FileDown, FileText,
+  Sparkles, Loader2, RotateCcw, AlertCircle,
 } from 'lucide-react'
 import {
   buscarCliente, conversasContato, mensagensConversa, analisar, downloadAsDoc, downloadAsPdf,
@@ -181,8 +181,8 @@ export default function AuditorAuditoria() {
       )}
 
       {error && (
-        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-          ⚠️ {error}
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" /> <span>{error}</span>
         </div>
       )}
 
