@@ -47,7 +47,7 @@ function KanbanCard({ id }) {
     t.prioridade === 'alta' ? 'text-rose-600' : t.prioridade === 'media' ? 'text-amber-600' : 'text-emerald-600'
   return (
     <>
-      <div className="mb-1 flex items-center gap-2">
+      <div className="mb-1 flex items-center gap-2 overflow-hidden">
         <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
           #{t.codigo_cliente}
         </span>
@@ -63,7 +63,7 @@ function KanbanCard({ id }) {
           {t.prioridade}
         </span>
       </div>
-      <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-slate-800">{t.titulo}</h3>
+      <h3 className="line-clamp-2 min-h-0 flex-1 text-[13px] font-semibold leading-snug text-slate-800">{t.titulo}</h3>
       <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-400">
         <AvatarDot name={t.responsavel?.name} role={t.responsavel?.role} />
         <span className="truncate">{t.responsavel?.name?.split(' ')[0] || 'Sem responsável'}</span>
@@ -88,7 +88,7 @@ function Column({ area, status, ids, openTicket }) {
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex min-h-24 flex-col gap-2 rounded-2xl border p-2 transition ${
+            className={`flex max-h-[23rem] min-h-24 flex-col gap-2 overflow-y-auto rounded-2xl border p-2 transition ${
               snapshot.isDraggingOver
                 ? 'border-blue-300 bg-blue-50/60'
                 : 'border-slate-200 bg-slate-50/50'
@@ -105,7 +105,7 @@ function Column({ area, status, ids, openTicket }) {
                     {...dragProvided.draggableProps}
                     {...dragProvided.dragHandleProps}
                     onClick={() => openTicket(id)}
-                    className={`glass cursor-pointer rounded-xl p-3 transition ${
+                    className={`glass flex h-28 shrink-0 cursor-pointer flex-col rounded-xl p-3 transition ${
                       dragSnapshot.isDragging
                         ? 'rotate-1 scale-[1.03] shadow-lg ring-2 ring-blue-300'
                         : 'hover:-translate-y-0.5 hover:shadow-md'
