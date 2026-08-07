@@ -65,6 +65,18 @@ $$;
 
 create index if not exists tickets_parent_idx on public.tickets (parent_id);
 
+-- fim da fase tecnica (quando o ticket geral migra para o treinamento)
+do $$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'tickets' and column_name = 'tecnica_concluido_em'
+  ) then
+    alter table public.tickets add column tecnica_concluido_em timestamptz;
+  end if;
+end
+$$;
+
 -- ---------- TABELA: PROCESSOS (checklist dos processos ja feitos do ticket pai) ----------
 create table if not exists public.processos (
   id uuid primary key default gen_random_uuid(),

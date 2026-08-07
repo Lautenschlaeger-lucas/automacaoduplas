@@ -194,6 +194,7 @@ export default function Kanban() {
     const patch = {}
     if (srcStatus !== alvo.status) patch.status = alvo.status
     if (srcArea !== alvo.area) patch.area = alvo.area
+    if (alvo.tecnica_concluido_em) patch.tecnica_concluido_em = alvo.tecnica_concluido_em
 
     if (!moved?.responsavel_id && (alvo.status === STATUS.EM_ANDAMENTO || alvo.status === STATUS.PENDENCIA)) {
       patch.responsavel_id = user?.id
