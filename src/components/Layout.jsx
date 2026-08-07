@@ -106,8 +106,28 @@ function UserChip({ collapsed }) {
   )
 }
 
+const COLLAPSED_KEY = 'sidebar_collapsed'
+
 export default function Layout() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSED_KEY) === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  function toggleCollapsed() {
+    setCollapsed((v) => {
+      const next = !v
+      try {
+        localStorage.setItem(COLLAPSED_KEY, String(next))
+      } catch {
+        /* ignore */
+      }
+      return next
+    })
+  }
 
   return (
     <div className="bg-space flex min-h-screen">
@@ -156,7 +176,7 @@ export default function Layout() {
         <div className="flex flex-col gap-3">
           <UserChip collapsed={collapsed} />
           <button
-            onClick={() => setCollapsed((v) => !v)}
+            onClick={toggleCollapsed}
             className="group relative self-end rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           >
             {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
