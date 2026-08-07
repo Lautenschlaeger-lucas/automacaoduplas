@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Kanban, LogOut, Zap, Upload } from 'lucide-react'
+import { LayoutDashboard, Kanban, LogOut, Zap, Upload, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { ROLE_LABEL, ROLE_SOLID } from '../lib/constants'
 import { initials } from '../lib/format'
@@ -8,6 +8,7 @@ const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/kanban', label: 'Kanban', icon: Kanban },
   { to: '/importar', label: 'Importar CSV', icon: Upload },
+  { to: '/auditor', label: 'Auditor', icon: ShieldCheck },
 ]
 
 function Brand() {

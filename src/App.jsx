@@ -6,6 +6,10 @@ import Dashboard from './pages/Dashboard'
 import Kanban from './pages/Kanban'
 import ProjectDetail from './pages/ProjectDetail'
 import ImportCsv from './pages/ImportCsv'
+import AuditorLayout from './pages/AuditorLayout'
+import AuditorAuditoria from './pages/AuditorAuditoria'
+import AuditorMonitor from './pages/AuditorMonitor'
+import AuditorConfig from './pages/AuditorConfig'
 
 function Loader() {
   return (
@@ -32,6 +36,11 @@ export default function App() {
           <Route path="/kanban" element={<Kanban />} />
           <Route path="/importar" element={<ImportCsv />} />
           <Route path="/projetos/:codigo" element={<ProjectDetail />} />
+          <Route path="/auditor" element={<AuditorLayout />}>
+            <Route path="" element={<AuditorAuditoria />} />
+            <Route path="monitor" element={<AuditorMonitor />} />
+            <Route path="config" element={<AuditorConfig />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

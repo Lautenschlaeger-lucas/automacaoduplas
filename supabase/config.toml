@@ -1,0 +1,27 @@
+# Supabase config for the Painel + Auditor Chatwoot Edge Functions
+# ============================================================
+# Segredos (rodar com Supabase CLI):
+#   npx supabase secrets set CHATWOOT_URL=... CHATWOOT_ACCOUNT_ID=...
+#   npx supabase secrets set CHATWOOT_API_KEY=... DEEPSEEK_API_KEY=...
+# E ao ativar o webhook (opcional, opcao A):
+#   npx supabase secrets set CHATWOOT_WEBHOOK_SECRET=...
+# ============================================================
+
+project_id = "painel-implantacao"
+
+[functions.poller_fetch]
+verify_jwt = true
+
+[functions.chatwoot_proxy]
+verify_jwt = true
+
+[functions.analyze]
+verify_jwt = true
+
+# Webhook recebe POST do Chatwoot (nao envia JWT do Supabase)
+[functions.chatwoot_webhook]
+verify_jwt = false
+
+# Criacao do webhook via API do Chatwoot (apenas admin do painel)
+[functions.setup_webhook]
+verify_jwt = true
