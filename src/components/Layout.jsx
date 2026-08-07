@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Kanban, LogOut, Zap, Upload, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Kanban, LogOut, Zap, Upload, MessageCircle, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { ROLE_LABEL, ROLE_SOLID } from '../lib/constants'
 import { initials } from '../lib/format'
@@ -11,67 +12,103 @@ const NAV = [
   { to: '/auditor', label: 'Monitor ChatWoot', icon: MessageCircle },
 ]
 
-function Brand() {
+function Brand({ collapsed }) {
   return (
-    <div className="flex items-center gap-3 px-2 py-1">
-      <div className="dial flex h-9 w-9 items-center justify-center rounded-xl text-white">
+    <div className={`flex items-center px-2 py-1 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+      <div className="dial flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white">
         <Zap size={20} strokeWidth={2.5} />
       </div>
-      <div>
-        <div className="text-sm font-extrabold tracking-wide text-slate-800">PAINEL</div>
-        <div className="text-[10px] font-medium uppercase tracking-[0.25em] text-slate-400">Implantação</div>
-      </div>
+      {!collapsed && (
+        <div className="min-w-0">
+          <div className="text-sm font-extrabold tracking-wide text-slate-800">PAINEL</div>
+          <div className="text-[10px] font-medium uppercase tracking-[0.25em] text-slate-400">Implantação</div>
+        </div>
+      )}
     </div>
   )
 }
 
-function UserChip() {
+function UserChip({ collapsed }) {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
   const role = profile?.role || 'tecnica'
   const name = profile?.name || 'Usuário'
 
   return (
-    <div className="glass rounded-2xl p-3">
-      <div className="flex items-center gap-3">
+    <div className={`glass rounded-2xl p-3 ${collapsed ? 'flex justify-center' : ''}`}>
+      <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-3'}`}>
         <div
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${ROLE_SOLID[role] || 'bg-slate-500'}`}
         >
           {initials(name)}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-slate-800">{name}</div>
-          <div className="text-[11px] text-slate-400">{ROLE_LABEL[role] || role}</div>
-        </div>
-        <button
-          onClick={async () => {
-            await signOut()
-            navigate('/dashboard')
-          }}
-          title="Sair"
-          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-        >
-          <LogOut size={16} />
-        </button>
+        {!collapsed && (
+          <>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-slate-800">{name}</div>
+              <div className="text-[11px] text-slate-400">{ROLE_LABEL[role] || role}</div>
+            </div>
+            <button
+              onClick={async () => {
+                await signOut()
+                navigate('/dashboard')
+              }}
+              title="Sair"
+              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+            >
+              <LogOut size={16} />
+            </button>
+          </>
+        )}
+        {collapsed && (
+          <button
+            onClick={async () => {
+              await signOut()
+              navigate('/dashboard')
+            }}
+            title="Sair"
+            className="rounded-lg p-1 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+          >
+            <LogOut size={15} />
+          </button>
+        )}
       </div>
     </div>
   )
 }
 
 export default function Layout() {
+  const [collapsed, setCollapsed] = useState(false)
+
   return (
     <div className="bg-space flex min-h-screen">
-      <aside className="glass-strong sticky top-0 hidden h-screen w-60 shrink-0 flex-col justify-between gap-6 p-4 lg:flex">
+      <aside
+        className={`glass-strong sticky top-0 hidden h-screen shrink-0 flex-col justify-between gap-6 p-4 transition-[width] duration-200 lg:flex ${
+          collapsed ? 'w-[76px]' : 'w-60'
+        }`}
+      >
         <div className="flex flex-col gap-8">
-          <Brand />
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-2'}`}>
+            <Brand collapsed={collapsed} />
+            <button
+              onClick={() => setCollapsed((v) => !v)}
+              title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            </button>
+          </div>
           <nav className="flex flex-col gap-1">
             {NAV.map(({ to, label, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={end}
+                title={collapsed ? label : undefined}
                 className={({ isActive }) =>
                   `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                    collapsed ? 'justify-center px-2' : ''
+                  } ${
                     isActive
                       ? 'bg-slate-100 text-slate-900'
                       : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
@@ -83,15 +120,15 @@ export default function Layout() {
                     {isActive && (
                       <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-blue-600" />
                     )}
-                    <Icon size={18} className={isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-500'} />
-                    {label}
+                    <Icon size={18} className={isActive ? 'shrink-0 text-blue-600' : 'shrink-0 text-slate-400 group-hover:text-slate-500'} />
+                    {!collapsed && label}
                   </>
                 )}
               </NavLink>
             ))}
           </nav>
         </div>
-        <UserChip />
+        <UserChip collapsed={collapsed} />
       </aside>
 
       <div className="min-w-0 flex-1">
