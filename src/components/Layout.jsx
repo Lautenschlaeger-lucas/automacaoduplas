@@ -33,45 +33,72 @@ function UserChip({ collapsed }) {
   const navigate = useNavigate()
   const role = profile?.role || 'tecnica'
   const name = profile?.name || 'Usuário'
+  const [open, setOpen] = useState(false)
+
+  async function handleSignOut() {
+    setOpen(false)
+    await signOut()
+    navigate('/dashboard')
+  }
+
+  if (collapsed) {
+    return (
+      <div className="relative flex justify-center">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          title={open ? 'Fechar' : 'Menu do usuário'}
+          className={`relative flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm transition ring-2 ${
+            open ? 'ring-blue-500' : 'ring-slate-200 hover:ring-slate-300'
+          } ${ROLE_SOLID[role] || 'bg-slate-500'}`}
+        >
+          {initials(name)}
+        </button>
+
+        {open && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+            <div className="absolute left-full top-0 z-40 ml-3 w-56 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${ROLE_SOLID[role] || 'bg-slate-500'}`}>
+                  {initials(name)}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-slate-800">{name}</div>
+                  <div className="text-[11px] text-slate-400">{ROLE_LABEL[role] || role}</div>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="mt-3 flex w-full items-center gap-2 rounded-lg border border-rose-100 bg-rose-50 px-2.5 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
+              >
+                <LogOut size={15} /> Sair
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
 
   return (
-    <div className={`glass rounded-2xl p-3 ${collapsed ? 'flex justify-center' : ''}`}>
-      <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-3'}`}>
+    <div className="glass rounded-2xl p-3">
+      <div className="flex items-center gap-3">
         <div
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${ROLE_SOLID[role] || 'bg-slate-500'}`}
         >
           {initials(name)}
         </div>
-        {!collapsed && (
-          <>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-slate-800">{name}</div>
-              <div className="text-[11px] text-slate-400">{ROLE_LABEL[role] || role}</div>
-            </div>
-            <button
-              onClick={async () => {
-                await signOut()
-                navigate('/dashboard')
-              }}
-              title="Sair"
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-            >
-              <LogOut size={16} />
-            </button>
-          </>
-        )}
-        {collapsed && (
-          <button
-            onClick={async () => {
-              await signOut()
-              navigate('/dashboard')
-            }}
-            title="Sair"
-            className="rounded-lg p-1 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-          >
-            <LogOut size={15} />
-          </button>
-        )}
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-slate-800">{name}</div>
+          <div className="text-[11px] text-slate-400">{ROLE_LABEL[role] || role}</div>
+        </div>
+        <button
+          onClick={handleSignOut}
+          title="Sair"
+          className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+        >
+          <LogOut size={16} />
+        </button>
       </div>
     </div>
   )
@@ -88,23 +115,13 @@ export default function Layout() {
         }`}
       >
         <div className="flex flex-col gap-8">
-          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between gap-2'}`}>
-            <Brand collapsed={collapsed} />
-            <button
-              onClick={() => setCollapsed((v) => !v)}
-              title={collapsed ? 'Expandir menu' : 'Recolher menu'}
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-            >
-              {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-            </button>
-          </div>
+          <Brand collapsed={collapsed} />
           <nav className="flex flex-col gap-1">
             {NAV.map(({ to, label, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={end}
-                title={collapsed ? label : undefined}
                 className={({ isActive }) =>
                   `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     collapsed ? 'justify-center px-2' : ''
@@ -122,13 +139,28 @@ export default function Layout() {
                     )}
                     <Icon size={18} className={isActive ? 'shrink-0 text-blue-600' : 'shrink-0 text-slate-400 group-hover:text-slate-500'} />
                     {!collapsed && label}
+                    {collapsed && (
+                      <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+                        {label}
+                      </span>
+                    )}
                   </>
                 )}
               </NavLink>
             ))}
           </nav>
         </div>
-        <UserChip collapsed={collapsed} />
+
+        <div className={`flex flex-col items-center gap-3 ${collapsed ? '' : 'items-stretch'}`}>
+          <UserChip collapsed={collapsed} />
+          <button
+            onClick={() => setCollapsed((v) => !v)}
+            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+        </div>
       </aside>
 
       <div className="min-w-0 flex-1">
