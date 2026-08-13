@@ -20,7 +20,6 @@ import {
   AREAS,
   AREA_LABEL,
   AREA_CHIP,
-  STATUS,
   STATUS_ORDER,
   STATUS_LABEL,
   STATUS_CHIP,
@@ -116,12 +115,12 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
   async function handleSubmit(e) {
     e.preventDefault()
     const payload = FLUXO_TECNICA_TREINAMENTO({ ...form }, isParent)
-    const concluiuTreinamento =
+    const ehHandoff =
       isParent &&
-      payload.area === AREAS.TREINAMENTO &&
-      payload.status === STATUS.CONCLUIDO &&
-      !(ticket.area === AREAS.TREINAMENTO && ticket.status === STATUS.CONCLUIDO)
-    if (concluiuTreinamento) {
+      ticket.area === AREAS.TECNICA &&
+      payload.tecnica_concluido_em !== undefined &&
+      payload.tecnica_concluido_em != null
+    if (ehHandoff) {
       setShowConcluirTrn(true)
       return
     }

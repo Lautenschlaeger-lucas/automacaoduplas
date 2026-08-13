@@ -284,9 +284,10 @@ export default function Kanban() {
 
     if (
       !moved?.parent_id &&
-      alvo.area === AREAS.TREINAMENTO &&
-      alvo.status === STATUS.CONCLUIDO &&
-      !(moved.area === AREAS.TREINAMENTO && moved.status === STATUS.CONCLUIDO)
+      moved.area === AREAS.TECNICA &&
+      dstArea === AREAS.TECNICA &&
+      dstStatus === STATUS.CONCLUIDO &&
+      moved.status !== STATUS.CONCLUIDO
     ) {
       setConcluirTreinamento(moved)
       return
