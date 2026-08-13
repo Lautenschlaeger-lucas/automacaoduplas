@@ -27,7 +27,7 @@ export default function ConcluirTreinamentoModal({ open, onClose, ticket, onSave
     )
     setAnalistaId(ticket.responsavel_id || '')
     supabase.from('profiles').select('id, name, role').order('name').then(({ data }) => {
-      setAnalistas(data?.filter((c) => c.role === 'treinamento') || [])
+      setAnalistas(data || [])
     })
   }, [open, ticket])
 
@@ -98,9 +98,7 @@ export default function ConcluirTreinamentoModal({ open, onClose, ticket, onSave
           {analistas === null ? (
             <div className="py-1 text-xs text-slate-400">Carregando analistas...</div>
           ) : analistas.length === 0 ? (
-            <p className="text-xs text-rose-600">
-              Nenhum analista com perfil de treinamento cadastrado.
-            </p>
+            <p className="text-xs text-rose-600">Nenhum colaborador cadastrado.</p>
           ) : (
             <select value={analistaId} onChange={(e) => setAnalistaId(e.target.value)} className="field">
               <option value="">Selecione...</option>
