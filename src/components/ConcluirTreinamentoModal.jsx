@@ -63,6 +63,18 @@ export default function ConcluirTreinamentoModal({ open, onClose, ticket, onSave
         },
       ])
       if (err2) throw err2
+      if (ehHandoff) {
+        const { error: err3 } = await supabase.from('comunicados').insert([
+          {
+            ticket_id: ticket.id,
+            codigo_cliente: ticket.codigo_cliente,
+            remetente_id: user?.id,
+            destinatario_id: user?.id,
+            mensagem: `Cliente ${ticket.nome_cliente || `#${ticket.codigo_cliente}`} concluiu a etapa técnica — atualizar as informações dele no CRM principal.`,
+          },
+        ])
+        if (err3) throw err3
+      }
       onSaved?.()
       onClose()
     } catch (err) {
