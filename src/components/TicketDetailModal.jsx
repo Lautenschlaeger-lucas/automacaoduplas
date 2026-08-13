@@ -6,6 +6,7 @@ import {
   Plus,
   FolderOpen,
   CheckCircle2,
+  CheckCheck,
   Trash2,
   ArrowLeft,
 } from 'lucide-react'
@@ -23,6 +24,7 @@ import {
   STATUS_CHIP,
   PRIORITY_LABEL,
   FLUXO_TECNICA_TREINAMENTO,
+  CHECKLIST_STATUS,
 } from '../lib/constants'
 
 export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOpenTicket }) {
@@ -169,6 +171,20 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
     setProcessos((prev) => [...prev, data[0]])
   }
 
+  async function marcarTodosFeito() {
+    const pendentes = (processos || []).filter((p) => p.status !== CHECKLIST_STATUS.FEITO)
+    if (!pendentes.length) return
+    if (!confirm(`Marcar ${pendentes.length} item(ns) do checklist como concluído?`)) return
+    const ids = pendentes.map((p) => p.id)
+    const patch = { status: CHECKLIST_STATUS.FEITO, bloqueado_por: null, tipo_bloqueio: null, motivo: null }
+    const { error } = await supabase.from('processos').update(patch).in('id', ids)
+    if (error) {
+      setError(error.message || 'Erro ao marcar itens como concluído.')
+      return
+    }
+    setProcessos((prev) => prev.map((p) => (ids.includes(p.id) ? { ...p, ...patch } : p)))
+  }
+
   if (!ticket || !form) return null
 
   const geral = progressoChecklist(processos || [])
@@ -302,6 +318,16 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
                   {geral.feitos}/{geral.aplicaveis} · {geral.pct}%
                 </span>
               </h3>
+              <button
+                type="button"
+                onClick={marcarTodosFeito}
+                disabled={!processos?.length || processos.every((p) => p.status === CHECKLIST_STATUS.FEITO)}
+                className="mb-2 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                title="Marcar todos os itens do checklist como concluídos"
+              >
+                <CheckCheck size={13} />
+                Marcar todos como concluídos
+              </button>
               {processos && processos.length === 0 ? (
                 <p className="py-2 text-center text-[11px] text-slate-400">
                   Nenhum item registrado ainda
