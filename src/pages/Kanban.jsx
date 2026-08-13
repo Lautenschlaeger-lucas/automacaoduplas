@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Plus, Search, Laptop, GraduationCap, Wrench } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, fetchAllRows } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP, FLUXO_TECNICA_TREINAMENTO } from '../lib/constants'
 import { progressoChecklist, estadoTicket, useLimiteParado } from '../lib/checklist'
@@ -228,7 +228,7 @@ export default function Kanban() {
       setTicketsByColumn(cols)
     }
     async function loadProcessos() {
-      const { data } = await supabase.from('processos').select('*')
+      const { data } = await fetchAllRows(supabase, 'processos')
       if (active && data) setProcessos(data)
     }
     load()

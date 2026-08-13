@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Users, CheckCircle2, Timer, Clock, Plus, TrendingUp, Layers, ChevronRight, Settings, AlertTriangle, Lock } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, fetchAllRows } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { STATUS, AREAS, AREA_BAR, AREA_CHIP, AREA_LABEL, CHECKLIST_CATEGORIAS, CHECKLIST_CATEGORIA_LABEL, CHECKLIST_CATEGORIA_BAR, CHECKLIST_STATUS_LABEL } from '../lib/constants'
 import { progressoChecklist, itensBloqueados, estadoTicket, useLimiteParado } from '../lib/checklist'
@@ -87,7 +87,7 @@ export default function Dashboard() {
         .select('*, responsavel:profiles!tickets_responsavel_id_fkey(name, role)')
         .order('criado_em', { ascending: false }),
       supabase.from('profiles').select('*').order('name'),
-      supabase.from('processos').select('*'),
+      fetchAllRows(supabase, 'processos'),
     ]).then(([t, p, pr]) => {
       setTickets(t.data || [])
       setCollabs(p.data || [])
