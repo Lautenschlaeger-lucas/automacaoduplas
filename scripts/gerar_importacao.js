@@ -181,9 +181,9 @@ lines.push('\n-- 1) Tickets gerais por cliente (cria se nao existir; trigger sem
 lines.push('insert into public.tickets (codigo_cliente, nome_cliente, titulo, area, status)')
 lines.push('select v.codigo, v.nome, v.nome, \'tecnica\', \'aberto\'')
 lines.push('from (values')
-for (const [cod, c] of clientes) {
-  lines.push(`  (${q(cod)}, ${q(c.nome)}),`)
-}
+lines.push(
+  [...clientes.entries()].map(([cod, c]) => `  (${q(cod)}, ${q(c.nome)})`).join(',\n')
+)
 lines.push(') as v(codigo, nome)')
 lines.push('on conflict (codigo_cliente) where parent_id is null')
 lines.push(`do update set nome_cliente = excluded.nome_cliente;`)
@@ -202,7 +202,7 @@ for (const [chave, list] of porChave) {
   lines.push(`update public.processos p`)
   lines.push(`set status = v.status`)
   lines.push(`from (values`)
-  for (const [cod, st] of list) lines.push(`  (${q(cod)}, ${q(st)}),`)
+  lines.push(list.map(([cod, st]) => `  (${q(cod)}, ${q(st)})`).join(',\n'))
   lines.push(`) as v(codigo, status)`)
   lines.push(`join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null`)
   lines.push(`where p.ticket_pai_id = t.id and p.chave = ${q(chave)} and p.tipo = 'padrao'`)
@@ -219,7 +219,7 @@ if (clientesComMotivo.length) {
   lines.push('update public.processos p')
   lines.push('set motivo = v.motivo')
   lines.push('from (values')
-  for (const [cod, c] of clientesComMotivo) lines.push(`  (${q(cod)}, ${q(c.motivo.trim())}),`)
+  lines.push(clientesComMotivo.map(([cod, c]) => `  (${q(cod)}, ${q(c.motivo.trim())})`).join(',\n'))
   lines.push(') as v(codigo, motivo)')
   lines.push(`join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null`)
   lines.push(`where p.ticket_pai_id = t.id and p.tipo = 'padrao' and p.status = 'bloqueado' and p.motivo is distinct from v.motivo;`)
@@ -232,7 +232,7 @@ if (clientesComMotivo.length) {
   lines.push("  when t.descricao is null or t.descricao = '' then 'Bloqueio (planilha): ' || v.motivo")
   lines.push("  else t.descricao || E'\\nBloqueio (planilha): ' || v.motivo end")
   lines.push('from (values')
-  for (const [cod, c] of clientesComMotivo) lines.push(`  (${q(cod)}, ${q(c.motivo.trim())}),`)
+  lines.push(clientesComMotivo.map(([cod, c]) => `  (${q(cod)}, ${q(c.motivo.trim())})`).join(',\n'))
   lines.push(') as v(codigo, motivo)')
   lines.push(`where t.codigo_cliente = v.codigo and t.parent_id is null`)
   lines.push(`  and not exists (select 1 from public.processos pp where pp.ticket_pai_id = t.id and pp.status = 'bloqueado');`)
@@ -245,9 +245,11 @@ if (customPorCliente.size) {
   lines.push('insert into public.processos (ticket_pai_id, titulo, tipo, chave, status, ordem)')
   lines.push('select t.id, v.titulo, \'custom\', v.chave, v.status, 100')
   lines.push('from (values')
+  const customRows = []
   for (const [cod, customs] of customPorCliente) {
-    for (const c of customs) lines.push(`  (${q(cod)}, ${q(c.titulo)}, ${q(c.chave)}, ${q(c.status)}),`)
+    for (const c of customs) customRows.push(`  (${q(cod)}, ${q(c.titulo)}, ${q(c.chave)}, ${q(c.status)})`)
   }
+  lines.push(customRows.join(',\n'))
   lines.push(') as v(codigo, titulo, chave, status)')
   lines.push(`join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null`)
   lines.push('on conflict (ticket_pai_id, chave) where chave is not null')

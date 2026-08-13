@@ -51,7 +51,7 @@ from (values
   ('3222', 'BUQ CARE'),
   ('3217', 'MYPET'),
   ('3205', 'TECIDOS MIRAMONTES'),
-  ('3186', 'THERMO KLIMA'),
+  ('3186', 'THERMO KLIMA')
 ) as v(codigo, nome)
 on conflict (codigo_cliente) where parent_id is null
 do update set nome_cliente = excluded.nome_cliente;
@@ -76,7 +76,7 @@ from (values
   ('3299', 'feito'),
   ('3278', 'feito'),
   ('3267', 'feito'),
-  ('3236', 'feito'),
+  ('3236', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'anuncios_tela_importacao' and p.tipo = 'padrao'
@@ -102,7 +102,7 @@ from (values
   ('3267', 'feito'),
   ('3239', 'feito'),
   ('3236', 'feito'),
-  ('3205', 'feito'),
+  ('3205', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'cadastro_produtos' and p.tipo = 'padrao'
@@ -127,7 +127,7 @@ from (values
   ('3278', 'feito'),
   ('3267', 'feito'),
   ('3239', 'feito'),
-  ('3236', 'feito'),
+  ('3236', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'mapeamento_categorias' and p.tipo = 'padrao'
@@ -153,7 +153,7 @@ from (values
   ('3267', 'feito'),
   ('3239', 'feito'),
   ('3236', 'feito'),
-  ('3205', 'feito'),
+  ('3205', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'publicacao_anuncios' and p.tipo = 'padrao'
@@ -178,7 +178,7 @@ from (values
   ('3278', 'bloqueado'),
   ('3267', 'bloqueado'),
   ('3236', 'parcial'),
-  ('3205', 'feito'),
+  ('3205', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'config_estoque' and p.tipo = 'padrao'
@@ -202,7 +202,7 @@ from (values
   ('3299', 'feito'),
   ('3278', 'feito'),
   ('3267', 'pendente'),
-  ('3236', 'feito'),
+  ('3236', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'integracao_marketplaces' and p.tipo = 'padrao'
@@ -225,7 +225,7 @@ from (values
   ('3299', 'nao_aplicavel'),
   ('3278', 'feito'),
   ('3267', 'pendente'),
-  ('3236', 'feito'),
+  ('3236', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'integracao_logistica' and p.tipo = 'padrao'
@@ -251,7 +251,7 @@ from (values
   ('3267', 'feito'),
   ('3239', 'feito'),
   ('3236', 'feito'),
-  ('3205', 'feito'),
+  ('3205', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'gestao_anuncios' and p.tipo = 'padrao'
@@ -273,7 +273,7 @@ from (values
   ('3299', 'pendente'),
   ('3278', 'pendente'),
   ('3267', 'feito'),
-  ('3239', 'feito'),
+  ('3239', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'dashboard_status_pedidos' and p.tipo = 'padrao'
@@ -298,7 +298,7 @@ from (values
   ('3267', 'feito'),
   ('3239', 'feito'),
   ('3236', 'pendente'),
-  ('3205', 'feito'),
+  ('3205', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'precificacao_automatica' and p.tipo = 'padrao'
@@ -322,7 +322,7 @@ from (values
   ('3278', 'feito'),
   ('3267', 'feito'),
   ('3236', 'feito'),
-  ('3205', 'feito'),
+  ('3205', 'feito')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'treinamento_importacao_anuncios' and p.tipo = 'padrao'
@@ -348,7 +348,7 @@ from (values
   ('3267', 'feito'),
   ('3239', 'feito'),
   ('3236', 'parcial'),
-  ('3205', 'pendente'),
+  ('3205', 'pendente')
 ) as v(codigo, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.chave = 'acompanhar_importacao_anuncios' and p.tipo = 'padrao'
@@ -372,7 +372,7 @@ from (values
   ('3278', 'Estão perdido com a expedição'),
   ('3267', 'Pendente treinamento Geral'),
   ('3236', 'Ativação de contas'),
-  ('3222', 'Cliente cancelou Snkhya'),
+  ('3222', 'Cliente cancelou Snkhya')
 ) as v(codigo, motivo)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 where p.ticket_pai_id = t.id and p.tipo = 'padrao' and p.status = 'bloqueado' and p.motivo is distinct from v.motivo;
@@ -398,7 +398,7 @@ from (values
   ('3278', 'Estão perdido com a expedição'),
   ('3267', 'Pendente treinamento Geral'),
   ('3236', 'Ativação de contas'),
-  ('3222', 'Cliente cancelou Snkhya'),
+  ('3222', 'Cliente cancelou Snkhya')
 ) as v(codigo, motivo)
 where t.codigo_cliente = v.codigo and t.parent_id is null
   and not exists (select 1 from public.processos pp where pp.ticket_pai_id = t.id and pp.status = 'bloqueado');
@@ -440,7 +440,7 @@ from (values
   ('3239', 'Virada', 'legado_virada', 'feito'),
   ('3239', 'Acompanhamento', 'legado_acompanhamento', 'feito'),
   ('3236', 'Virada', 'legado_virada', 'parcial'),
-  ('3236', 'Acompanhamento', 'legado_acompanhamento', 'feito'),
+  ('3236', 'Acompanhamento', 'legado_acompanhamento', 'feito')
 ) as v(codigo, titulo, chave, status)
 join public.tickets t on t.codigo_cliente = v.codigo and t.parent_id is null
 on conflict (ticket_pai_id, chave) where chave is not null
