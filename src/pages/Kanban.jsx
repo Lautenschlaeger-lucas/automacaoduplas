@@ -99,7 +99,7 @@ function KanbanCard({ id }) {
             </span>
           )}
           {!est.bloqueado && !est.parado && (
-            <span className="ml-auto flex items-center gap-1.5 text-[10px] text-slate-400">
+            <span className="ml-auto flex min-w-0 items-center gap-1.5 overflow-hidden text-[10px] text-slate-400">
               {progsResponsavel(t)}
             </span>
           )}
@@ -124,7 +124,7 @@ function KanbanCard({ id }) {
         </span>
       </div>
       <h3 className="line-clamp-2 min-h-0 flex-1 text-[13px] font-semibold leading-snug text-slate-800">{t.titulo}</h3>
-      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-400">
+      <div className="mt-2 flex min-w-0 items-center gap-1.5 overflow-hidden text-[10px] text-slate-400">
         {progsResponsavel(t)}
       </div>
     </>
@@ -135,8 +135,8 @@ function progsResponsavel(t) {
   return (
     <>
       <AvatarDot name={t.responsavel?.name} role={t.responsavel?.role} />
-      <span className="truncate">{t.responsavel?.name?.split(' ')[0] || 'Sem responsável'}</span>
-      {t.nome_cliente && <span className="truncate">· {t.nome_cliente}</span>}
+      <span className="min-w-0 truncate">{t.responsavel?.name?.split(' ')[0] || 'Sem responsável'}</span>
+      {t.nome_cliente && <span className="min-w-0 truncate">· {t.nome_cliente}</span>}
     </>
   )
 }
