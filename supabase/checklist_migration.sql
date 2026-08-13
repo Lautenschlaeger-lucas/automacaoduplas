@@ -48,58 +48,81 @@ create trigger set_processos_updated_at
   before insert or update on public.processos
   for each row execute procedure public.set_processos_updated_at();
 
--- ---------- SEED: itens padrao para todos os tickets gerais (1 por cliente) ----------
-insert into public.processos (ticket_pai_id, titulo, tipo, categoria, chave, ordem, status)
-select t.id, v.titulo, 'padrao', v.categoria, v.chave, v.ordem, 'pendente'
-from public.tickets t
-cross join (
-  values
-    -- TAREFAS DO ANALISTA TECNICO (20)
-    ('Analisar Validação do Negócio', 'tecnica', 'validacao_negocio', 1),
-    ('Criar pasta no Drive para reuniões gravadas e incluir o link no ticket', 'tecnica', 'pasta_drive_reunioes', 2),
-    ('Ativar apps contratados', 'tecnica', 'ativar_apps', 3),
-    ('Integração do ERP ou Faturador', 'tecnica', 'integracao_erp', 4),
-    ('Integração dos marketplaces e Lojas Virtuais', 'tecnica', 'integracao_marketplaces', 5),
-    ('Configurações fiscais', 'tecnica', 'config_fiscais', 6),
-    ('Configurações de estoque', 'tecnica', 'config_estoque', 7),
-    ('Integração Logística', 'tecnica', 'integracao_logistica', 8),
-    ('Garantir que todos os anúncios vieram para a tela de importação', 'tecnica', 'anuncios_tela_importacao', 9),
-    ('Configuração da Impressora para realização do teste de expedição', 'tecnica', 'config_impressora_teste', 10),
-    ('Teste de expedição', 'tecnica', 'teste_expedicao', 11),
-    ('Abertura de todos os @tickets e N2 pertinentes para integrações (MKT, ERP e Integração logística)', 'tecnica', 'abertura_tickets_n2', 12),
-    ('Acompanhamento no grupo de demandas técnicas, customizações, dúvidas e possíveis testes de integração', 'tecnica', 'acompanhamento_demandas', 13),
-    ('Reportar customizações', 'tecnica', 'reportar_customizacoes', 14),
-    ('Acompanhar os @tickets e retorná-los aos clientes', 'tecnica', 'acompanhar_tickets', 15),
-    ('Documentações técnicas e reporte de novos fluxos', 'tecnica', 'documentacoes_tecnicas', 16),
-    ('Pausar filas de estoque (se necessário após kick off)', 'tecnica', 'pausar_filas_estoque', 17),
-    ('Ativar Feature Flags (pedidos em processando, sankhya, descontos, etc.)', 'tecnica', 'ativar_feature_flags', 18),
-    ('Conferir comunicação de estoque', 'tecnica', 'conferir_comunicacao_estoque', 19),
-    ('Validação de pedidos concluída', 'tecnica', 'validacao_pedidos', 20),
-    -- TAREFAS DO ANALISTA DE TREINAMENTO (18)
-    ('Acompanhar importação de anúncios em tela ou conferir o upload da planilha de importação', 'treinamento', 'acompanhar_importacao_anuncios', 1),
-    ('Treinamento de Importação dos anúncios', 'treinamento', 'treinamento_importacao_anuncios', 2),
-    ('Cadastro de produtos simples, compostos e com variações', 'treinamento', 'cadastro_produtos', 3),
-    ('Mapeamento de categorias e atributos', 'treinamento', 'mapeamento_categorias', 4),
-    ('Publicação de anúncio simples, kits e com variações', 'treinamento', 'publicacao_anuncios', 5),
-    ('Gestão de anúncios já publicados', 'treinamento', 'gestao_anuncios', 6),
-    ('Treinamento de todo o módulo expedição e pedidos', 'treinamento', 'treinamento_expedicao_pedidos', 7),
-    ('Dashboard e status dos pedidos', 'treinamento', 'dashboard_status_pedidos', 8),
-    ('Precificação Automática', 'treinamento', 'precificacao_automatica', 9),
-    ('Módulo Mercado Livre', 'treinamento', 'modulo_mercado_livre', 10),
-    ('Relatórios', 'treinamento', 'relatorios', 11),
-    ('Módulo Compras', 'treinamento', 'modulo_compras', 12),
-    ('Módulo Financeiro', 'treinamento', 'modulo_financeiro', 13),
-    ('SAC ML', 'treinamento', 'sac_ml', 14),
-    ('Apresentar todos os aplicativos', 'treinamento', 'apresentar_aplicativos', 15),
-    ('Acompanhar o cliente na criação do portal do cliente para acompanhar os tickets em aberto', 'treinamento', 'portal_cliente', 16),
-    ('Ativar filas de estoque', 'treinamento', 'ativar_filas_estoque', 17),
-    ('Retirar flags de processamento de pedidos', 'treinamento', 'retirar_flags_processamento', 18)
-) as v(titulo, categoria, chave, ordem)
-where t.parent_id is null
-  and not exists (
-    select 1 from public.processos p
-    where p.ticket_pai_id = t.id and p.chave = v.chave
-  );
+-- ---------- SEED: itens padrao por ticket geral (1 por cliente) ----------
+-- Funcao reutilizada pela migracao e pelo trigger de novos tickets gerais.
+create or replace function public.seed_checklist_itens(_ticket uuid)
+returns void
+language sql
+as $$
+  insert into public.processos (ticket_pai_id, titulo, tipo, categoria, chave, ordem, status)
+  select _ticket, v.titulo, 'padrao', v.categoria, v.chave, v.ordem, 'pendente'
+  from (
+    values
+      -- TAREFAS DO ANALISTA TECNICO (20)
+      ('Analisar Validação do Negócio', 'tecnica', 'validacao_negocio', 1),
+      ('Criar pasta no Drive para reuniões gravadas e incluir o link no ticket', 'tecnica', 'pasta_drive_reunioes', 2),
+      ('Ativar apps contratados', 'tecnica', 'ativar_apps', 3),
+      ('Integração do ERP ou Faturador', 'tecnica', 'integracao_erp', 4),
+      ('Integração dos marketplaces e Lojas Virtuais', 'tecnica', 'integracao_marketplaces', 5),
+      ('Configurações fiscais', 'tecnica', 'config_fiscais', 6),
+      ('Configurações de estoque', 'tecnica', 'config_estoque', 7),
+      ('Integração Logística', 'tecnica', 'integracao_logistica', 8),
+      ('Garantir que todos os anúncios vieram para a tela de importação', 'tecnica', 'anuncios_tela_importacao', 9),
+      ('Configuração da Impressora para realização do teste de expedição', 'tecnica', 'config_impressora_teste', 10),
+      ('Teste de expedição', 'tecnica', 'teste_expedicao', 11),
+      ('Abertura de todos os @tickets e N2 pertinentes para integrações (MKT, ERP e Integração logística)', 'tecnica', 'abertura_tickets_n2', 12),
+      ('Acompanhamento no grupo de demandas técnicas, customizações, dúvidas e possíveis testes de integração', 'tecnica', 'acompanhamento_demandas', 13),
+      ('Reportar customizações', 'tecnica', 'reportar_customizacoes', 14),
+      ('Acompanhar os @tickets e retorná-los aos clientes', 'tecnica', 'acompanhar_tickets', 15),
+      ('Documentações técnicas e reporte de novos fluxos', 'tecnica', 'documentacoes_tecnicas', 16),
+      ('Pausar filas de estoque (se necessário após kick off)', 'tecnica', 'pausar_filas_estoque', 17),
+      ('Ativar Feature Flags (pedidos em processando, sankhya, descontos, etc.)', 'tecnica', 'ativar_feature_flags', 18),
+      ('Conferir comunicação de estoque', 'tecnica', 'conferir_comunicacao_estoque', 19),
+      ('Validação de pedidos concluída', 'tecnica', 'validacao_pedidos', 20),
+      -- TAREFAS DO ANALISTA DE TREINAMENTO (18)
+      ('Acompanhar importação de anúncios em tela ou conferir o upload da planilha de importação', 'treinamento', 'acompanhar_importacao_anuncios', 1),
+      ('Treinamento de Importação dos anúncios', 'treinamento', 'treinamento_importacao_anuncios', 2),
+      ('Cadastro de produtos simples, compostos e com variações', 'treinamento', 'cadastro_produtos', 3),
+      ('Mapeamento de categorias e atributos', 'treinamento', 'mapeamento_categorias', 4),
+      ('Publicação de anúncio simples, kits e com variações', 'treinamento', 'publicacao_anuncios', 5),
+      ('Gestão de anúncios já publicados', 'treinamento', 'gestao_anuncios', 6),
+      ('Treinamento de todo o módulo expedição e pedidos', 'treinamento', 'treinamento_expedicao_pedidos', 7),
+      ('Dashboard e status dos pedidos', 'treinamento', 'dashboard_status_pedidos', 8),
+      ('Precificação Automática', 'treinamento', 'precificacao_automatica', 9),
+      ('Módulo Mercado Livre', 'treinamento', 'modulo_mercado_livre', 10),
+      ('Relatórios', 'treinamento', 'relatorios', 11),
+      ('Módulo Compras', 'treinamento', 'modulo_compras', 12),
+      ('Módulo Financeiro', 'treinamento', 'modulo_financeiro', 13),
+      ('SAC ML', 'treinamento', 'sac_ml', 14),
+      ('Apresentar todos os aplicativos', 'treinamento', 'apresentar_aplicativos', 15),
+      ('Acompanhar o cliente na criação do portal do cliente para acompanhar os tickets em aberto', 'treinamento', 'portal_cliente', 16),
+      ('Ativar filas de estoque', 'treinamento', 'ativar_filas_estoque', 17),
+      ('Retirar flags de processamento de pedidos', 'treinamento', 'retirar_flags_processamento', 18)
+  ) as v(titulo, categoria, chave, ordem)
+  on conflict (ticket_pai_id, chave) where chave is not null do nothing;
+$$;
+
+-- seed dos tickets gerais existentes
+select public.seed_checklist_itens(id)
+from public.tickets
+where parent_id is null;
+
+-- novos tickets gerais (clientes) ganham o checklist automaticamente
+create or replace function public.ticket_pai_seed_checklist()
+returns trigger
+language plpgsql
+as $$
+begin
+  perform public.seed_checklist_itens(new.id);
+  return new;
+end;
+$$;
+
+drop trigger if exists ticket_pai_seed_checklist on public.tickets;
+create trigger ticket_pai_seed_checklist
+  after insert on public.tickets
+  for each row when (new.parent_id is null)
+  execute procedure public.ticket_pai_seed_checklist();
 
 -- ---------- APP_CONFIG: configuracoes do painel ----------
 create table if not exists public.app_config (

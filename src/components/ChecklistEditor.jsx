@@ -157,7 +157,7 @@ export default function ChecklistEditor({ processos = [], onUpdate, onDelete, on
 
   return (
     <div className="flex flex-col gap-4">
-      {Object.keys(CHECKLIST_CATEGORIAS).map((cat) => {
+      {Object.values(CHECKLIST_CATEGORIAS).map((cat) => {
         const itens = padrao
           .filter((p) => p.categoria === cat)
           .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
