@@ -116,6 +116,7 @@ alter table public.app_config enable row level security;
 
 drop policy if exists "config: leitura autenticados" on public.app_config;
 drop policy if exists "config: admin altera" on public.app_config;
+drop policy if exists "config: admin insere" on public.app_config;
 create policy "config: leitura autenticados" on public.app_config
   for select using (auth.role() = 'authenticated');
 create policy "config: admin altera" on public.app_config
