@@ -124,6 +124,17 @@ create trigger ticket_pai_seed_checklist
   for each row when (new.parent_id is null)
   execute procedure public.ticket_pai_seed_checklist();
 
+-- BACKFILL: clientes com implantacao concluida ate hoje tem TODAS as flags
+-- do checklist marcadas como 'feito' (itens nao_aplicavel sao preservados).
+-- Idempotente: so muda itens que ainda estao pendente/parcial/bloqueado.
+update public.processos p
+set status = 'feito'
+from public.tickets t
+where t.id = p.ticket_pai_id
+  and t.parent_id is null
+  and t.status = 'concluido'
+  and p.status <> 'nao_aplicavel';
+
 -- ---------- APP_CONFIG: configuracoes do painel ----------
 create table if not exists public.app_config (
   key text primary key,
