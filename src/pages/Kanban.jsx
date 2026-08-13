@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Plus, Search, Laptop, GraduationCap, Wrench } from 'lucide-react'
 import { supabase, fetchAllRows } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP, FLUXO_TECNICA_TREINAMENTO } from '../lib/constants'
+import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_LABEL_TECNICA, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP, FLUXO_TECNICA_TREINAMENTO } from '../lib/constants'
 import { progressoChecklist, estadoTicket, useLimiteParado } from '../lib/checklist'
 import { Spinner } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
@@ -143,13 +143,14 @@ function progsResponsavel(t) {
 
 function Column({ area, status, ids, openTicket }) {
   const { ticketsById } = useKanbanCtx()
+  const label = area === AREAS.TECNICA ? STATUS_LABEL_TECNICA[status] : STATUS_LABEL[status]
   return (
     <Droppable droppableId={`${area}:${status}`}>
       {(provided, snapshot) => (
         <div className="flex min-w-60 flex-1 flex-col">
           <div className="mb-2 flex items-center gap-2 px-1">
             <span className={`h-2 w-2 rounded-full ${STATUS_DOT[status]}`} />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{STATUS_LABEL[status]}</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</span>
             <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
               {ids.length}
             </span>

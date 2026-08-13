@@ -33,6 +33,13 @@ export const STATUS_LABEL = {
   concluido: 'Concluído',
 }
 
+export const STATUS_LABEL_TECNICA = {
+  aberto: 'Kick Off',
+  em_andamento: 'Teste de pedidos',
+  pendencia: 'Pendência',
+  concluido: 'Concluído',
+}
+
 export const STATUS_DOT = {
   aberto: 'bg-sky-500',
   em_andamento: 'bg-amber-500',
