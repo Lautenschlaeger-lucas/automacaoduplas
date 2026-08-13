@@ -204,6 +204,8 @@ export default function Kanban() {
   const { limite } = useLimiteParado(supabase)
   const [query, setQuery] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('todos')
+  const [analistaFiltro, setAnalistaFiltro] = useState('todos')
+  const [analistas, setAnalistas] = useState([])
   const [showNew, setShowNew] = useState(false)
   const [activeTicket, setActiveTicket] = useState(null)
 
@@ -232,8 +234,17 @@ export default function Kanban() {
       const { data } = await fetchAllRows(supabase, 'processos')
       if (active && data) setProcessos(data)
     }
+    async function loadAnalistas() {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .not('name', 'is', null)
+        .order('name')
+      if (active && data) setAnalistas(data)
+    }
     load()
     loadProcessos()
+    loadAnalistas()
 
     const channel = supabase
       .channel('kanban-realtime')
@@ -317,6 +328,7 @@ export default function Kanban() {
               t.titulo.toLowerCase().includes(q)
             if (!match) return false
           }
+          if (analistaFiltro !== 'todos' && t.responsavel_id !== analistaFiltro) return false
           if (estadoFiltro !== 'todos') {
             const pai = ticketsById[t.parent_id || t.id]
             const est = estadoTicket(pai, processosByPai[pai?.id] || [], limite)
@@ -328,7 +340,7 @@ export default function Kanban() {
       })
     )
     return cols
-  }, [query, estadoFiltro, ticketsByColumn, ticketsById, processosByPai, limite])
+  }, [query, estadoFiltro, analistaFiltro, ticketsByColumn, ticketsById, processosByPai, limite])
 
   if (!ticketsByColumn) {
     return (
@@ -368,6 +380,20 @@ export default function Kanban() {
               <option value="todos">Todos os estados</option>
               <option value="bloqueados">Bloqueados</option>
               <option value="parados">Parados</option>
+            </select>
+
+            <select
+              value={analistaFiltro}
+              onChange={(e) => setAnalistaFiltro(e.target.value)}
+              className="field w-36 !py-2 sm:w-44"
+              title="Filtrar por analista responsável"
+            >
+              <option value="todos">Todos os analistas</option>
+              {analistas.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
             </select>
 
             <button onClick={() => setShowNew(true)} className="btn-primary">
