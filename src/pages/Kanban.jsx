@@ -8,6 +8,7 @@ import { progressoChecklist, estadoTicket, useLimiteParado } from '../lib/checkl
 import { Spinner } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
 import TicketDetailModal from '../components/TicketDetailModal'
+import ConcluirTreinamentoModal from '../components/ConcluirTreinamentoModal'
 
 const KanbanContext = createContext({ ticketsById: {}, processosByPai: {}, limite: 5 })
 const useKanbanCtx = () => useContext(KanbanContext)
@@ -208,6 +209,7 @@ export default function Kanban() {
   const [analistas, setAnalistas] = useState([])
   const [showNew, setShowNew] = useState(false)
   const [activeTicket, setActiveTicket] = useState(null)
+  const [concluirTreinamento, setConcluirTreinamento] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -279,6 +281,16 @@ export default function Kanban() {
       { area: dstArea, status: dstStatus },
       !moved?.parent_id
     )
+
+    if (
+      !moved?.parent_id &&
+      alvo.area === AREAS.TREINAMENTO &&
+      alvo.status === STATUS.CONCLUIDO &&
+      !(moved.area === AREAS.TREINAMENTO && moved.status === STATUS.CONCLUIDO)
+    ) {
+      setConcluirTreinamento(moved)
+      return
+    }
 
     setTicketsByColumn((prev) => {
       const cols = JSON.parse(JSON.stringify(prev))
@@ -436,6 +448,12 @@ export default function Kanban() {
           ticket={activeTicket}
           onClose={() => setActiveTicket(null)}
           onOpenTicket={setActiveTicket}
+        />
+
+        <ConcluirTreinamentoModal
+          open={!!concluirTreinamento}
+          ticket={concluirTreinamento}
+          onClose={() => setConcluirTreinamento(null)}
         />
       </div>
     </KanbanContext.Provider>

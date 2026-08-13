@@ -13,12 +13,14 @@ import {
 import { supabase } from '../lib/supabase'
 import Modal from './ui'
 import NewTicketModal from './NewTicketModal'
+import ConcluirTreinamentoModal from './ConcluirTreinamentoModal'
 import ChecklistEditor from './ChecklistEditor'
 import { progressoChecklist } from '../lib/checklist'
 import {
   AREAS,
   AREA_LABEL,
   AREA_CHIP,
+  STATUS,
   STATUS_ORDER,
   STATUS_LABEL,
   STATUS_CHIP,
@@ -36,6 +38,7 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
   const [processos, setProcessos] = useState(null)
   const [filhos, setFilhos] = useState(null)
   const [showNew, setShowNew] = useState(false)
+  const [showConcluirTrn, setShowConcluirTrn] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -112,10 +115,19 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
 
   async function handleSubmit(e) {
     e.preventDefault()
+    const payload = FLUXO_TECNICA_TREINAMENTO({ ...form }, isParent)
+    const concluiuTreinamento =
+      isParent &&
+      payload.area === AREAS.TREINAMENTO &&
+      payload.status === STATUS.CONCLUIDO &&
+      !(ticket.area === AREAS.TREINAMENTO && ticket.status === STATUS.CONCLUIDO)
+    if (concluiuTreinamento) {
+      setShowConcluirTrn(true)
+      return
+    }
     setBusy(true)
     setError('')
     try {
-      const payload = FLUXO_TECNICA_TREINAMENTO({ ...form }, isParent)
       const { error: err } = await supabase.from('tickets').update(payload).eq('id', ticket.id)
       if (err) throw err
       setForm(payload)
@@ -389,6 +401,16 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
         onClose={() => setShowNew(false)}
         codigoInicial={ticket.codigo_cliente}
         areaInicial={ticket.area}
+      />
+
+      <ConcluirTreinamentoModal
+        open={showConcluirTrn}
+        onClose={() => setShowConcluirTrn(false)}
+        ticket={ticket}
+        onSaved={() => {
+          onSaved?.()
+          onClose()
+        }}
       />
     </Modal>
   )

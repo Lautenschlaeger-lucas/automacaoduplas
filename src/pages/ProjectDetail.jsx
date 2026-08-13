@@ -30,7 +30,7 @@ import {
   PRIORITY_LABEL,
   PRIORITY_BADGE,
 } from '../lib/constants'
-import { formatDate, timeAgo, daysBetween } from '../lib/format'
+import { formatDate, timeAgo, daysBetween, formatDateTime } from '../lib/format'
 import { Spinner, EmptyState, Avatar } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
 import EditClientModal from '../components/EditClientModal'
@@ -247,6 +247,11 @@ export default function ClientDetail() {
           <InfoRow icon={Phone} label="Telefone" value={info.telefone} />
           <InfoRow icon={UserIcon} label="Contato" value={info.contato} />
           <InfoRow icon={Package} label="Versão do sistema" value={info.versao_sistema} />
+          <InfoRow
+            icon={CheckCircle2}
+            label="Treinamento concluído"
+            value={parent?.treinamento_concluido_em ? formatDateTime(parent.treinamento_concluido_em) : ''}
+          />
         </div>
       </div>
 

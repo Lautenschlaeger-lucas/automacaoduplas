@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Kanban, LogOut, Zap, Upload, MessageCircle, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { LayoutDashboard, Kanban, LogOut, Zap, Upload, MessageCircle, PanelLeftClose, PanelLeftOpen, Inbox } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 import { ROLE_LABEL, ROLE_SOLID } from '../lib/constants'
 import { initials } from '../lib/format'
 
@@ -9,6 +10,7 @@ const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/kanban', label: 'Kanban', icon: Kanban },
   { to: '/importar', label: 'Importar CSV', icon: Upload },
+  { to: '/comunicados', label: 'Comunicados', icon: Inbox },
   { to: '/auditor', label: 'Monitor ChatWoot', icon: MessageCircle },
 ]
 
@@ -109,6 +111,7 @@ function UserChip({ collapsed }) {
 const COLLAPSED_KEY = 'sidebar_collapsed'
 
 export default function Layout() {
+  const { user } = useAuth()
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(COLLAPSED_KEY) === 'true'
@@ -116,6 +119,25 @@ export default function Layout() {
       return false
     }
   })
+  const [naoLidos, setNaoLidos] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    async function load() {
+      const { count } = await supabase
+        .from('comunicados')
+        .select('id', { count: 'exact', head: true })
+        .eq('destinatario_id', user.id)
+        .is('lido_em', null)
+      setNaoLidos(count || 0)
+    }
+    load()
+    const chan = supabase
+      .channel('layout-comunicados')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comunicados' }, () => load())
+      .subscribe()
+    return () => supabase.removeChannel(chan)
+  }, [user])
 
   function toggleCollapsed() {
     setCollapsed((v) => {
@@ -161,6 +183,14 @@ export default function Layout() {
                     )}
                     <Icon size={18} className={isActive ? 'shrink-0 text-blue-600' : 'shrink-0 text-slate-400 group-hover:text-slate-500'} />
                     {!collapsed && label}
+                    {!collapsed && to === '/comunicados' && naoLidos > 0 && (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
+                        {naoLidos}
+                      </span>
+                    )}
+                    {collapsed && to === '/comunicados' && naoLidos > 0 && (
+                      <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
+                    )}
                     {collapsed && (
                       <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
                         {label}
@@ -204,7 +234,14 @@ export default function Layout() {
                   }`
                 }
               >
-                <Icon size={17} />
+                <span className="relative">
+                  <Icon size={17} />
+                  {to === '/comunicados' && naoLidos > 0 && (
+                    <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[8px] font-bold text-white">
+                      {naoLidos}
+                    </span>
+                  )}
+                </span>
                 {label}
               </NavLink>
             ))}
