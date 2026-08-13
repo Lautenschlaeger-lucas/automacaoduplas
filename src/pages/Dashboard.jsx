@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Users, CheckCircle2, Timer, Clock, Plus, TrendingUp, Layers, ChevronRight } from 'lucide-react'
+import { Users, CheckCircle2, Timer, Clock, Plus, TrendingUp, Layers, ChevronRight, Settings, AlertTriangle, Lock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
-import { STATUS, AREAS, AREA_BAR, AREA_CHIP, AREA_LABEL } from '../lib/constants'
+import { STATUS, AREAS, AREA_BAR, AREA_CHIP, AREA_LABEL, CHECKLIST_CATEGORIAS, CHECKLIST_CATEGORIA_LABEL, CHECKLIST_CATEGORIA_BAR, CHECKLIST_STATUS_LABEL } from '../lib/constants'
+import { progressoChecklist, itensBloqueados, estadoTicket, useLimiteParado } from '../lib/checklist'
 import { formatDate, timeAgo, daysBetween, monthKey } from '../lib/format'
 import { Spinner, EmptyState } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
+import ConfigModal from '../components/ConfigModal'
 
 function KpiCard({ icon: Icon, label, value, sub, accent = 'bg-slate-100 text-slate-600' }) {
   return (
@@ -75,6 +77,8 @@ export default function Dashboard() {
   const [collabs, setCollabs] = useState([])
   const [filtro, setFiltro] = useState('todos')
   const [showNew, setShowNew] = useState(false)
+  const [showConfig, setShowConfig] = useState(false)
+  const { limite } = useLimiteParado(supabase)
 
   useEffect(() => {
     Promise.all([
@@ -155,6 +159,46 @@ export default function Dashboard() {
         return (b.dias || 0) - (a.dias || 0)
       })
   }, [visiveis, processos])
+
+  const processosByPai = useMemo(() => {
+    const map = {}
+    processos.forEach((p) => {
+      ;(map[p.ticket_pai_id] ||= []).push(p)
+    })
+    return map
+  }, [processos])
+
+  // Saude das implantacoes (% medio por etapa, bloqueados por responsavel, parados)
+  const saude = useMemo(() => {
+    if (!projetos) return null
+    const ativos = projetos.filter((p) => !p.concluido)
+    const cats = {}
+    Object.values(CHECKLIST_CATEGORIAS).forEach((cat) => {
+      const pcts = ativos
+        .map((p) => {
+          const procs = processosByPai[p.parent?.id] || []
+          const prog = progressoChecklist(procs.filter((x) => x.categoria === cat))
+          return prog.aplicaveis > 0 ? prog.pct : null
+        })
+        .filter((x) => x != null)
+      cats[cat] = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null
+    })
+    const bloqueados = {}
+    projetos.forEach((p) => {
+      itensBloqueados(processosByPai[p.parent?.id] || []).forEach((item) => {
+        const nome = item.bloqueado_por || 'Sem responsável'
+        ;(bloqueados[nome] ||= []).push({ projeto: p, item })
+      })
+    })
+    const parados = projetos
+      .map((p) => {
+        const procs = processosByPai[p.parent?.id] || []
+        return { projeto: p, est: estadoTicket(p.parent, procs, limite) }
+      })
+      .filter((x) => x.est?.parado)
+      .sort((a, b) => b.est.diasParado - a.est.diasParado)
+    return { cats, bloqueados, parados }
+  }, [projetos, processosByPai, limite])
 
   const kpis = useMemo(() => {
     if (!visiveis) return null
@@ -282,6 +326,11 @@ export default function Dashboard() {
                   </option>
                 ))}
           </select>
+          {isAdmin && (
+            <button onClick={() => setShowConfig(true)} className="btn-ghost" title="Configurações do painel">
+              <Settings size={16} />
+            </button>
+          )}
           <button onClick={() => setShowNew(true)} className="btn-primary">
             <Plus size={16} />
             Novo ticket
@@ -318,6 +367,118 @@ export default function Dashboard() {
           sub="média dos tickets concluídos"
           accent="bg-violet-50 text-violet-600"
         />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="glass rounded-2xl p-5">
+          <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-700">
+            <CheckCircle2 size={15} className="text-emerald-600" />
+            Conclusão média por etapa
+          </h2>
+          <div className="flex flex-col gap-3">
+            {Object.values(CHECKLIST_CATEGORIAS).map((cat) => {
+              const pct = saude.cats[cat]
+              return (
+                <div key={cat} className="flex items-center gap-3">
+                  <span className="w-24 shrink-0 text-xs font-semibold text-slate-600">
+                    {CHECKLIST_CATEGORIA_LABEL[cat]}
+                  </span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={`h-full rounded-full transition-all ${CHECKLIST_CATEGORIA_BAR[cat]}`}
+                      style={{ width: `${pct ?? 0}%` }}
+                    />
+                  </div>
+                  <span className="w-12 shrink-0 text-right text-xs font-bold text-slate-700">
+                    {pct == null ? '—' : `${pct}%`}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-4 text-[11px] text-slate-400">
+            Média do % de conclusão do checklist entre os clientes ativos.
+          </p>
+        </div>
+
+        <div className="glass rounded-2xl p-5">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-700">
+            <Lock size={15} className="text-rose-600" />
+            Bloqueados por responsável
+            <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+              {Object.keys(saude.bloqueados).length} responsáveis
+            </span>
+          </h2>
+          {Object.keys(saude.bloqueados).length === 0 ? (
+            <EmptyState title="Nenhum item bloqueado" />
+          ) : (
+            <div className="flex max-h-72 flex-col gap-3 overflow-y-auto pr-1">
+              {Object.entries(saude.bloqueados).map(([nome, lista]) => (
+                <div key={nome}>
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="rounded-md bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700">
+                      {nome}
+                    </span>
+                    <span className="text-[10px] text-slate-400">{lista.length} item(ns)</span>
+                  </div>
+                  <div className="flex flex-col divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/60">
+                    {lista.map(({ projeto, item }) => (
+                      <Link
+                        key={item.id}
+                        to={`/projetos/${projeto.codigo}`}
+                        className="flex flex-col gap-0.5 px-3 py-2 transition hover:bg-slate-100"
+                      >
+                        <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                          <AlertTriangle size={11} className="text-rose-500" />
+                          {projeto.nome || `Cliente ${projeto.codigo}`}
+                        </span>
+                        <span className="text-[11px] text-slate-500">{item.titulo}</span>
+                        {item.motivo && (
+                          <span className="text-[11px] italic text-slate-400">“{item.motivo}”</span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="glass rounded-2xl p-5">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-700">
+            <AlertTriangle size={15} className="text-amber-600" />
+            Parados
+            <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+              limite {limite}d úteis
+            </span>
+          </h2>
+          {saude.parados.length === 0 ? (
+            <EmptyState title="Nada parado no momento" />
+          ) : (
+            <div className="flex max-h-72 flex-col divide-y divide-slate-100 overflow-y-auto pr-1">
+              {saude.parados.map(({ projeto, est }) => (
+                <Link
+                  key={projeto.codigo}
+                  to={`/projetos/${projeto.codigo}`}
+                  className="flex items-center gap-3 py-2.5 transition hover:bg-slate-50"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-700">
+                      {projeto.nome || `Cliente ${projeto.codigo}`}
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      #{projeto.codigo} · sem atualização desde {formatDate(projeto.ultimaAtividade?.toISOString())}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                    {est.diasParado}d úteis
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="glass rounded-2xl p-5">
@@ -505,6 +666,7 @@ export default function Dashboard() {
       </div>
 
       <NewTicketModal open={showNew} onClose={() => setShowNew(false)} />
+      <ConfigModal open={showConfig} onClose={() => setShowConfig(false)} />
     </div>
   )
 }

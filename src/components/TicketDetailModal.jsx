@@ -6,13 +6,14 @@ import {
   Plus,
   FolderOpen,
   CheckCircle2,
-  Check,
   Trash2,
   ArrowLeft,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Modal from './ui'
 import NewTicketModal from './NewTicketModal'
+import ChecklistEditor from './ChecklistEditor'
+import { progressoChecklist } from '../lib/checklist'
 import {
   AREAS,
   AREA_LABEL,
@@ -32,7 +33,6 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
   const [parentTicket, setParentTicket] = useState(null)
   const [processos, setProcessos] = useState(null)
   const [filhos, setFilhos] = useState(null)
-  const [novoProcesso, setNovoProcesso] = useState('')
   const [showNew, setShowNew] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -139,34 +139,39 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
     onClose()
   }
 
-  async function addProcesso(e) {
-    e.preventDefault()
-    const titulo = novoProcesso.trim()
-    if (!titulo) return
-    const { error: err } = await supabase
-      .from('processos')
-      .insert([{ ticket_pai_id: ticket.id, titulo }])
-    if (err) {
-      setError(err.message || 'Erro ao adicionar processo.')
+  async function updateProcesso(id, patch) {
+    const { error } = await supabase.from('processos').update(patch).eq('id', id)
+    if (error) {
+      setError(error.message || 'Erro ao atualizar item.')
       return
     }
-    setNovoProcesso('')
-    loadProcessos()
+    setProcessos((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
   }
 
-  async function toggleProcesso(p) {
-    await supabase.from('processos').update({ feito: !p.feito }).eq('id', p.id)
-    loadProcessos()
+  async function deleteProcesso(id) {
+    const { error } = await supabase.from('processos').delete().eq('id', id)
+    if (error) {
+      setError(error.message || 'Erro ao excluir item.')
+      return
+    }
+    setProcessos((prev) => prev.filter((p) => p.id !== id))
   }
 
-  async function delProcesso(p) {
-    await supabase.from('processos').delete().eq('id', p.id)
-    loadProcessos()
+  async function addProcesso(titulo) {
+    const { data, error } = await supabase
+      .from('processos')
+      .insert([{ ticket_pai_id: ticket.id, titulo, tipo: 'custom' }])
+      .select()
+    if (error || !data?.[0]) {
+      setError((error?.message || '') || 'Erro ao adicionar item.')
+      return
+    }
+    setProcessos((prev) => [...prev, data[0]])
   }
 
   if (!ticket || !form) return null
 
-  const feitos = (processos || []).filter((p) => p.feito).length
+  const geral = progressoChecklist(processos || [])
 
   return (
     <Modal open={open} onClose={onClose} title={isParent ? `Ticket geral #${ticket.codigo_cliente}` : `Ticket #${ticket.codigo_cliente}`} wide>
@@ -286,57 +291,29 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
             <section className="col-span-2 border-t border-slate-100 pt-4">
               <h3 className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <CheckCircle2 size={13} className="text-emerald-500" />
-                Processos já feitos
-                <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
-                  {feitos}/{processos?.length || 0}
+                Checklist da implantação
+                <span className="ml-auto flex items-center gap-2 text-[10px] text-slate-400">
+                  <span className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
+                    <span
+                      className={`block h-full rounded-full transition-all ${geral.pct === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                      style={{ width: `${geral.pct}%` }}
+                    />
+                  </span>
+                  {geral.feitos}/{geral.aplicaveis} · {geral.pct}%
                 </span>
               </h3>
-              <form onSubmit={addProcesso} className="mb-2 flex gap-2">
-                <input
-                  value={novoProcesso}
-                  onChange={(e) => setNovoProcesso(e.target.value)}
-                  className="field !py-2"
-                  placeholder="Ex: Instalar servidor, criar banco, treinar equipe..."
-                />
-                <button type="submit" className="btn-primary shrink-0 !px-3 !py-2" title="Adicionar processo">
-                  <Plus size={14} />
-                </button>
-              </form>
-              {processos && processos.length === 0 && (
+              {processos && processos.length === 0 ? (
                 <p className="py-2 text-center text-[11px] text-slate-400">
-                  Nenhum processo registrado ainda
+                  Nenhum item registrado ainda
                 </p>
+              ) : (
+                <ChecklistEditor
+                  processos={processos || []}
+                  onUpdate={updateProcesso}
+                  onDelete={deleteProcesso}
+                  onAdd={addProcesso}
+                />
               )}
-              <div className="flex flex-col gap-1.5">
-                {processos?.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleProcesso(p)}
-                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
-                        p.feito ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 bg-white text-transparent hover:border-emerald-400'
-                      }`}
-                      title={p.feito ? 'Desmarcar' : 'Marcar feito'}
-                    >
-                      <Check size={12} strokeWidth={3} />
-                    </button>
-                    <span className={`text-sm ${p.feito ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                      {p.titulo}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => delProcesso(p)}
-                      className="ml-auto text-slate-300 transition hover:text-rose-500"
-                      title="Excluir processo"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
             </section>
 
             <section className="col-span-2 border-t border-slate-100 pt-4">

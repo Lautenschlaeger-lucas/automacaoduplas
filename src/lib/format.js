@@ -34,6 +34,24 @@ export function daysBetween(startIso, endIso) {
   return Math.round(ms / 86400000)
 }
 
+// Dias uteis (seg-sex) entre duas datas, contando dias completos decorridos
+export function diasUteisEntre(startIso, endIso) {
+  if (!startIso || !endIso) return null
+  const a = new Date(startIso)
+  const b = new Date(endIso)
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null
+  const start = new Date(a.getFullYear(), a.getMonth(), a.getDate())
+  const end = new Date(b.getFullYear(), b.getMonth(), b.getDate())
+  let count = 0
+  const d = new Date(start)
+  while (d < end) {
+    const dow = d.getDay()
+    if (dow !== 0 && dow !== 6) count++
+    d.setDate(d.getDate() + 1)
+  }
+  return count
+}
+
 export function initials(name = '') {
   const parts = name.trim().split(/\s+/)
   if (!parts[0]) return '?'

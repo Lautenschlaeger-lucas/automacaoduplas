@@ -35,6 +35,8 @@ import { Spinner, EmptyState, Avatar } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
 import EditClientModal from '../components/EditClientModal'
 import TicketDetailModal from '../components/TicketDetailModal'
+import ChecklistEditor from '../components/ChecklistEditor'
+import { progressoChecklist } from '../lib/checklist'
 
 const BLOCKS = [
   { key: STATUS.ABERTO, icon: Clock, title: 'Em aberto' },
@@ -60,6 +62,7 @@ export default function ClientDetail() {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const [tickets, setTickets] = useState(null)
+  const [processos, setProcessos] = useState(null)
   const [showNew, setShowNew] = useState(false)
   const [editing, setEditing] = useState(false)
   const [activeTicket, setActiveTicket] = useState(null)
@@ -91,6 +94,60 @@ export default function ClientDetail() {
       supabase.removeChannel(channel)
     }
   }, [codigo])
+
+  // Checklist estruturado (processos) do ticket geral do cliente
+  useEffect(() => {
+    if (!tickets) return
+    const parent = tickets.find((t) => !t.parent_id)
+    if (!parent) {
+      setProcessos([])
+      return
+    }
+    let active = true
+    async function load() {
+      const { data } = await supabase
+        .from('processos')
+        .select('*')
+        .eq('ticket_pai_id', parent.id)
+        .order('ordem', { ascending: true })
+      if (active) setProcessos(data || [])
+    }
+    load()
+    const chan = supabase
+      .channel(`cliente-processos-${parent.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'processos', filter: `ticket_pai_id=eq.${parent.id}` },
+        () => load()
+      )
+      .subscribe()
+    return () => {
+      active = false
+      supabase.removeChannel(chan)
+    }
+  }, [tickets])
+
+  async function updateProcesso(id, patch) {
+    const { error } = await supabase.from('processos').update(patch).eq('id', id)
+    if (!error) setProcessos((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
+  }
+
+  async function deleteProcesso(id) {
+    const { error } = await supabase.from('processos').delete().eq('id', id)
+    if (!error) setProcessos((prev) => prev.filter((p) => p.id !== id))
+  }
+
+  async function addProcesso(titulo) {
+    const parent = tickets?.find((t) => !t.parent_id)
+    if (!parent) return
+    const { data, error } = await supabase
+      .from('processos')
+      .insert([{ ticket_pai_id: parent.id, titulo, tipo: 'custom' }])
+      .select()
+    if (!error && data?.[0]) setProcessos((prev) => [...prev, data[0]])
+  }
+
+  const checkProgresso = progressoChecklist(processos || [])
 
   async function removeClient() {
     if (!confirm(`Excluir o projeto #${codigo} e todos os seus tickets?`)) return
@@ -225,6 +282,36 @@ export default function ClientDetail() {
             style={{ width: `${pct}%` }}
           />
         </div>
+      </div>
+
+      <div className="glass rounded-2xl p-5">
+        <div className="mb-3 flex items-center justify-between text-xs">
+          <span className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-500">
+            <CheckCircle2 size={14} className="text-emerald-500" />
+            Checklist da implantação
+          </span>
+          <span className="flex items-center gap-2 text-slate-400">
+            <span className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
+              <span
+                className={`block h-full rounded-full transition-all ${checkProgresso.pct === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                style={{ width: `${checkProgresso.pct}%` }}
+              />
+            </span>
+            {checkProgresso.feitos}/{checkProgresso.aplicaveis} · {checkProgresso.pct}%
+          </span>
+        </div>
+        {checkProgresso.total === 0 ? (
+          <p className="py-4 text-center text-[11px] text-slate-400">
+            Nenhum item no checklist deste projeto
+          </p>
+        ) : (
+          <ChecklistEditor
+            processos={processos || []}
+            onUpdate={updateProcesso}
+            onDelete={deleteProcesso}
+            onAdd={addProcesso}
+          />
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

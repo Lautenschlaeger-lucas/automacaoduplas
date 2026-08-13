@@ -4,11 +4,12 @@ import { Plus, Search, Laptop, GraduationCap, Wrench } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { STATUS, STATUS_ORDER, STATUS_LABEL, STATUS_DOT, AREAS, AREA_LABEL, AREA_CHIP, FLUXO_TECNICA_TREINAMENTO } from '../lib/constants'
+import { progressoChecklist, estadoTicket, useLimiteParado } from '../lib/checklist'
 import { Spinner } from '../components/ui'
 import NewTicketModal from '../components/NewTicketModal'
 import TicketDetailModal from '../components/TicketDetailModal'
 
-const KanbanContext = createContext({ ticketsById: {} })
+const KanbanContext = createContext({ ticketsById: {}, processosByPai: {}, limite: 5 })
 const useKanbanCtx = () => useContext(KanbanContext)
 
 const BOARDS = [
@@ -40,9 +41,73 @@ function AvatarDot({ name, role }) {
 }
 
 function KanbanCard({ id }) {
-  const { ticketsById } = useKanbanCtx()
+  const { ticketsById, processosByPai, limite } = useKanbanCtx()
   const t = ticketsById[id]
   if (!t) return null
+  const paiId = t.parent_id || t.id
+  const procs = processosByPai[paiId] || []
+
+  if (!t.parent_id) {
+    const prog = progressoChecklist(procs)
+    const est = estadoTicket(t, procs, limite)
+    const steads = est.itensBloqueados
+      .map((p) => p.bloqueado_por || 'sem responsável')
+      .filter((v, i, a) => a.indexOf(v) === i)
+    return (
+      <>
+        <div className="mb-1 flex items-center gap-2 overflow-hidden">
+          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+            #{t.codigo_cliente}
+          </span>
+          <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+            Geral
+          </span>
+          <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold capitalize ${AREA_CHIP[t.area]}`}>
+            {AREA_LABEL[t.area]}
+          </span>
+        </div>
+        <h3 className="line-clamp-1 min-h-0 flex-1 text-[13px] font-semibold leading-snug text-slate-800">
+          {t.titulo}
+        </h3>
+        <div className="mt-2 flex items-center gap-2">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className={`h-full rounded-full transition-all ${prog.pct === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`}
+              style={{ width: `${prog.pct}%` }}
+            />
+          </div>
+          <span className="text-[10px] font-bold text-slate-500">
+            {prog.feitos}/{prog.aplicaveis} · {prog.pct}%
+          </span>
+        </div>
+        <div className="mt-2 flex items-center gap-1.5">
+          {est.bloqueado && (
+            <span
+              className="flex items-center gap-1 rounded-md bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700"
+              title={est.itensBloqueados.map((p) => `${p.titulo}: ${p.motivo || 'sem motivo'}`).join('\n')}
+            >
+              Bloqueado · {steads[0]}
+              {steads.length > 1 && ` +${steads.length - 1}`}
+            </span>
+          )}
+          {est.parado && (
+            <span
+              className="flex items-center gap-1 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700"
+              title={`Sem atualização há ${est.diasParado} dias úteis`}
+            >
+              Parado {est.diasParado}d
+            </span>
+          )}
+          {!est.bloqueado && !est.parado && (
+            <span className="ml-auto flex items-center gap-1.5 text-[10px] text-slate-400">
+              {progsResponsavel(t)}
+            </span>
+          )}
+        </div>
+      </>
+    )
+  }
+
   const priority =
     t.prioridade === 'alta' ? 'text-rose-600' : t.prioridade === 'media' ? 'text-amber-600' : 'text-emerald-600'
   return (
@@ -51,11 +116,6 @@ function KanbanCard({ id }) {
         <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
           #{t.codigo_cliente}
         </span>
-        {!t.parent_id && (
-          <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
-            Geral
-          </span>
-        )}
         <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold capitalize ${AREA_CHIP[t.area]}`}>
           {AREA_LABEL[t.area]}
         </span>
@@ -65,15 +125,24 @@ function KanbanCard({ id }) {
       </div>
       <h3 className="line-clamp-2 min-h-0 flex-1 text-[13px] font-semibold leading-snug text-slate-800">{t.titulo}</h3>
       <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-400">
-        <AvatarDot name={t.responsavel?.name} role={t.responsavel?.role} />
-        <span className="truncate">{t.responsavel?.name?.split(' ')[0] || 'Sem responsável'}</span>
-        {t.nome_cliente && <span className="truncate">· {t.nome_cliente}</span>}
+        {progsResponsavel(t)}
       </div>
     </>
   )
 }
 
+function progsResponsavel(t) {
+  return (
+    <>
+      <AvatarDot name={t.responsavel?.name} role={t.responsavel?.role} />
+      <span className="truncate">{t.responsavel?.name?.split(' ')[0] || 'Sem responsável'}</span>
+      {t.nome_cliente && <span className="truncate">· {t.nome_cliente}</span>}
+    </>
+  )
+}
+
 function Column({ area, status, ids, openTicket }) {
+  const { ticketsById } = useKanbanCtx()
   return (
     <Droppable droppableId={`${area}:${status}`}>
       {(provided, snapshot) => (
@@ -105,7 +174,9 @@ function Column({ area, status, ids, openTicket }) {
                     {...dragProvided.draggableProps}
                     {...dragProvided.dragHandleProps}
                     onClick={() => openTicket(id)}
-                    className={`glass flex h-28 shrink-0 cursor-pointer flex-col rounded-xl p-3 transition ${
+                    className={`glass flex shrink-0 cursor-pointer flex-col rounded-xl p-3 transition ${
+                      ticketsById[id]?.parent_id ? 'h-28' : 'h-32'
+                    } ${
                       dragSnapshot.isDragging
                         ? 'rotate-1 scale-[1.03] shadow-lg ring-2 ring-blue-300'
                         : 'hover:-translate-y-0.5 hover:shadow-md'
@@ -128,7 +199,10 @@ export default function Kanban() {
   const { user } = useAuth()
   const [ticketsByColumn, setTicketsByColumn] = useState(null)
   const [ticketsById, setTicketsById] = useState({})
+  const [processos, setProcessos] = useState([])
+  const { limite } = useLimiteParado(supabase)
   const [query, setQuery] = useState('')
+  const [estadoFiltro, setEstadoFiltro] = useState('todos')
   const [showNew, setShowNew] = useState(false)
   const [activeTicket, setActiveTicket] = useState(null)
 
@@ -153,11 +227,17 @@ export default function Kanban() {
       setTicketsById(byId)
       setTicketsByColumn(cols)
     }
+    async function loadProcessos() {
+      const { data } = await supabase.from('processos').select('*')
+      if (active && data) setProcessos(data)
+    }
     load()
+    loadProcessos()
 
     const channel = supabase
       .channel('kanban-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, () => loadProcessos())
       .subscribe()
 
     return () => {
@@ -165,6 +245,14 @@ export default function Kanban() {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  const processosByPai = useMemo(() => {
+    const map = {}
+    processos.forEach((p) => {
+      ;(map[p.ticket_pai_id] ||= []).push(p)
+    })
+    return map
+  }, [processos])
 
   async function handleDragEnd(result) {
     const { destination, source, draggableId } = result
@@ -215,23 +303,31 @@ export default function Kanban() {
   const filtered = useMemo(() => {
     if (!ticketsByColumn) return ticketsByColumn
     const q = query.trim().toLowerCase()
-    if (!q) return ticketsByColumn
     const cols = JSON.parse(JSON.stringify(ticketsByColumn))
     BOARDS.forEach((b) =>
       STATUS_ORDER.forEach((s) => {
         cols[b.key][s] = cols[b.key][s].filter((id) => {
           const t = ticketsById[id]
           if (!t) return false
-          return (
-            (t.codigo_cliente || '').toLowerCase().includes(q) ||
-            (t.nome_cliente || '').toLowerCase().includes(q) ||
-            t.titulo.toLowerCase().includes(q)
-          )
+          if (q) {
+            const match =
+              (t.codigo_cliente || '').toLowerCase().includes(q) ||
+              (t.nome_cliente || '').toLowerCase().includes(q) ||
+              t.titulo.toLowerCase().includes(q)
+            if (!match) return false
+          }
+          if (estadoFiltro !== 'todos') {
+            const pai = ticketsById[t.parent_id || t.id]
+            const est = estadoTicket(pai, processosByPai[pai?.id] || [], limite)
+            if (estadoFiltro === 'bloqueados' && !est?.bloqueado) return false
+            if (estadoFiltro === 'parados' && !est?.parado) return false
+          }
+          return true
         })
       })
     )
     return cols
-  }, [query, ticketsByColumn, ticketsById])
+  }, [query, estadoFiltro, ticketsByColumn, ticketsById, processosByPai, limite])
 
   if (!ticketsByColumn) {
     return (
@@ -242,7 +338,7 @@ export default function Kanban() {
   }
 
   return (
-    <KanbanContext.Provider value={{ ticketsById }}>
+    <KanbanContext.Provider value={{ ticketsById, processosByPai, limite }}>
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -257,10 +353,21 @@ export default function Kanban() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar projeto..."
-                className="field w-40 py-2 sm:w-52"
+                className="field w-36 py-2 sm:w-44"
                 style={{ paddingLeft: '2.25rem' }}
               />
             </div>
+
+            <select
+              value={estadoFiltro}
+              onChange={(e) => setEstadoFiltro(e.target.value)}
+              className="field w-36 !py-2 sm:w-40"
+              title="Filtrar por estado de saúde da implantação"
+            >
+              <option value="todos">Todos os estados</option>
+              <option value="bloqueados">Bloqueados</option>
+              <option value="parados">Parados</option>
+            </select>
 
             <button onClick={() => setShowNew(true)} className="btn-primary">
               <Plus size={15} />
