@@ -26,6 +26,9 @@ import {
   PRIORITY_LABEL,
   FLUXO_TECNICA_TREINAMENTO,
   CHECKLIST_STATUS,
+  CHECKLIST_CATEGORIAS,
+  CHECKLIST_CATEGORIA_LABEL,
+  CHECKLIST_CATEGORIA_CHIP,
 } from '../lib/constants'
 
 export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOpenTicket }) {
@@ -182,10 +185,12 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
     setProcessos((prev) => [...prev, data[0]])
   }
 
-  async function marcarTodosFeito() {
-    const pendentes = (processos || []).filter((p) => p.status !== CHECKLIST_STATUS.FEITO)
+  async function marcarTodosFeito(categoria) {
+    const pendentes = (processos || []).filter(
+      (p) => p.categoria === categoria && p.status !== CHECKLIST_STATUS.FEITO
+    )
     if (!pendentes.length) return
-    if (!confirm(`Marcar ${pendentes.length} item(ns) do checklist como concluído?`)) return
+    if (!confirm(`Marcar ${pendentes.length} item(ns) da etapa ${CHECKLIST_CATEGORIA_LABEL[categoria]} como concluído?`)) return
     const ids = pendentes.map((p) => p.id)
     const patch = { status: CHECKLIST_STATUS.FEITO, bloqueado_por: null, tipo_bloqueio: null, motivo: null }
     const { error } = await supabase.from('processos').update(patch).in('id', ids)
@@ -329,16 +334,24 @@ export default function TicketDetailModal({ open, onClose, ticket, onSaved, onOp
                   {geral.feitos}/{geral.aplicaveis} · {geral.pct}%
                 </span>
               </h3>
-              <button
-                type="button"
-                onClick={marcarTodosFeito}
-                disabled={!processos?.length || processos.every((p) => p.status === CHECKLIST_STATUS.FEITO)}
-                className="mb-2 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
-                title="Marcar todos os itens do checklist como concluídos"
-              >
-                <CheckCheck size={13} />
-                Marcar todos como concluídos
-              </button>
+              <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                {Object.values(CHECKLIST_CATEGORIAS).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => marcarTodosFeito(cat)}
+                    disabled={
+                      !processos?.length ||
+                      !processos.some((p) => p.categoria === cat && p.status !== CHECKLIST_STATUS.FEITO)
+                    }
+                    className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-40 ${CHECKLIST_CATEGORIA_CHIP[cat]}`}
+                    title={`Marcar todos os itens da etapa ${CHECKLIST_CATEGORIA_LABEL[cat]} como concluídos`}
+                  >
+                    <CheckCheck size={13} />
+                    Concluir {CHECKLIST_CATEGORIA_LABEL[cat]}
+                  </button>
+                ))}
+              </div>
               {processos && processos.length === 0 ? (
                 <p className="py-2 text-center text-[11px] text-slate-400">
                   Nenhum item registrado ainda
